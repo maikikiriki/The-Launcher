@@ -89,7 +89,7 @@ private fun deviceSearchTargets(context: android.content.Context): List<DeviceSe
         listOf("bateria", "ahorro bateria", "battery", "battery saver")),
     DeviceSearchTarget(Settings.ACTION_APPLICATION_SETTINGS, context.getString(R.string.acronix_device_apps),
         listOf("aplicaciones", "gestionar aplicaciones", "apps", "installed apps")),
-    DeviceSearchTarget(Settings.ACTION_NOTIFICATION_SETTINGS, context.getString(R.string.acronix_device_notifications),
+    DeviceSearchTarget(Settings.ACTION_ALL_APPS_NOTIFICATION_SETTINGS, context.getString(R.string.acronix_device_notifications),
         listOf("notificaciones", "avisos", "notifications")),
     DeviceSearchTarget(Settings.ACTION_ACCESSIBILITY_SETTINGS, context.getString(R.string.acronix_device_accessibility),
         listOf("accesibilidad", "accessibility")),
