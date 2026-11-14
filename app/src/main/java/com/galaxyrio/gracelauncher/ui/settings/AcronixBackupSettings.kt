@@ -66,6 +66,8 @@ internal fun AcronixBackupSettings(onBack: () -> Unit) {
             Text(stringResource(R.string.acronix_backup_summary), style = MaterialTheme.typography.bodyLarge)
             Text(stringResource(R.string.acronix_backup_warning),
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.acronix_backup_restore_disabled),
+                color = MaterialTheme.colorScheme.error)
             Button(onClick = {
                 exporter.launch("Acronix-backup.zip")
             }, modifier = Modifier.fillMaxWidth(), enabled = !busy) {
@@ -73,7 +75,7 @@ internal fun AcronixBackupSettings(onBack: () -> Unit) {
             }
             Button(onClick = {
                 importer.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
-            }, modifier = Modifier.fillMaxWidth(), enabled = !busy) {
+            }, modifier = Modifier.fillMaxWidth(), enabled = false) {
                 Text(stringResource(R.string.acronix_backup_import))
             }
             Button(onClick = {

@@ -81,8 +81,13 @@ object AcronixBackup {
         }
     }
 
-    /** Validation occurs completely before any on-device state is replaced. */
-    suspend fun restore(context: Context, uri: Uri) = withContext(Dispatchers.IO) {
+    /** Restoration is disabled until crash recovery and archive integrity are verified. */
+    suspend fun restore(context: Context, uri: Uri): Nothing {
+        throw IllegalStateException("Backup restoration is temporarily unavailable")
+    }
+
+    // Retained for audit only. This implementation is not safe against process death.
+    private suspend fun restoreUnverified(context: Context, uri: Uri) = withContext(Dispatchers.IO) {
         val staging = File(context.cacheDir, "acronix_restore_${UUID.randomUUID()}")
         check(staging.mkdirs())
         val oldFiles = File(staging, "_rollback")

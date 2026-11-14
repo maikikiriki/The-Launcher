@@ -1183,6 +1183,7 @@
     <string name="acronix_backup_warning">Las copias pueden contener datos personales y no están cifradas. Guárdalas en un lugar privado. Son copias de Acronix: no pueden leer automáticamente los datos de Grace original. Algunos widgets necesitarán volver a autorizarse tras la restauración.</string>
     <string name="acronix_backup_export">Exportar copia</string>
     <string name="acronix_backup_import">Importar copia</string>
+    <string name="acronix_backup_restore_disabled">La importación está temporalmente desactivada mientras se verifican la recuperación y la integridad. Por ahora no se pueden restaurar las copias exportadas.</string>
     <string name="acronix_backup_share">Compartir copia</string>
     <string name="acronix_backup_saved">Copia exportada correctamente.</string>
     <string name="acronix_backup_restored">Copia importada. Cierra y vuelve a abrir Acronix para actualizar la pantalla. Algunos widgets necesitarán autorización.</string>
