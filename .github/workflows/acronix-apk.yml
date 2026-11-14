@@ -48,7 +48,12 @@ jobs:
             exit 1
           fi
           yes | "$SDKMANAGER" --licenses >/dev/null || true
-          "$SDKMANAGER" --install 'platforms;android-37' 'build-tools;36.1.0'
+          "$SDKMANAGER" --install 'platforms;android-37.0' 'build-tools;36.1.0' --channel=3
+          # API 37 se distribuye como android-37.0; algunas herramientas
+          # buscan la ruta clasica android-37.
+          if [ -d "$ANDROID_HOME/platforms/android-37.0" ] && [ ! -e "$ANDROID_HOME/platforms/android-37" ]; then
+            ln -s android-37.0 "$ANDROID_HOME/platforms/android-37"
+          fi
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
