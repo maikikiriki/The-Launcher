@@ -257,12 +257,10 @@ object AcronixBackup {
     }
 
     private fun exportPreferences(context: Context): JSONObject = JSONObject().apply {
-        val directory = File(context.applicationInfo.dataDir, "shared_prefs")
-        directory.listFiles().orEmpty().filter { it.isFile && it.name.endsWith(".xml") }.forEach { file ->
-            val name = file.name.removeSuffix(".xml")
-            if (!name.matches(Regex("[A-Za-z0-9_.-]{1,100}"))) return@forEach
+        BackupPreferencePolicy.files.forEach { name ->
             val values = JSONObject()
             for ((key, value) in context.getSharedPreferences(name, Context.MODE_PRIVATE).all) {
+                if (!BackupPreferencePolicy.allows(name, key)) continue
                 val item = JSONObject()
                 when (value) {
                     is String -> item.put("type", "string").put("value", value)
