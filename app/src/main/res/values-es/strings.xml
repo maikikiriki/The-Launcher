@@ -1148,4 +1148,25 @@
     <string name="agenda_today_heading">Hoy</string>
     <string name="agenda_choose_create_action">Elige qué añadir</string>
     <string name="agenda_daily_content">Contenido diario</string>
+
+    <!-- Acronix launcher-specific search features -->
+    <string name="acronix_search_order">Orden de los resultados de búsqueda</string>
+    <string name="acronix_search_order_summary">Cambia el orden de las fuentes con los botones para subir y bajar.</string>
+    <string name="acronix_search_section_apps">Aplicaciones</string>
+    <string name="acronix_search_section_contacts">Contactos</string>
+    <string name="acronix_search_section_device">Ajustes del dispositivo</string>
+    <string name="acronix_search_section_internet">Búsqueda web</string>
+    <string name="acronix_search_device_enabled">Buscar ajustes del dispositivo</string>
+    <string name="acronix_search_device_summary">Busca Wi-Fi, Bluetooth, opciones de desarrollador y otros ajustes locales.</string>
+    <string name="acronix_search_move_up">Subir</string>
+    <string name="acronix_search_move_down">Bajar</string>
+    <string name="acronix_device_developer">Opciones de desarrollador</string>
+    <string name="acronix_device_wifi">Ajustes de Wi-Fi</string>
+    <string name="acronix_device_bluetooth">Ajustes de Bluetooth</string>
+    <string name="acronix_device_apps">Ajustes de aplicaciones</string>
+    <string name="acronix_device_battery">Ahorro de batería</string>
+    <string name="acronix_device_display">Ajustes de pantalla</string>
+    <string name="acronix_device_security">Ajustes de seguridad</string>
+    <string name="acronix_device_accessibility">Ajustes de accesibilidad</string>
+    <string name="acronix_device_notifications">Ajustes de notificaciones</string>
 </resources>
