@@ -1207,4 +1207,12 @@
     <string name="acronix_move_up">Move %1$s up</string>
     <string name="acronix_move_down">Move %1$s down</string>
     <string name="acronix_done">Done</string>
+
+    <string name="acronix_migration_title">Grace video profile</string>
+    <string name="acronix_migration_summary">Apply the settings visible in your Grace Launcher video.</string>
+    <string name="acronix_migration_details">Uses dynamic colors, Vibrant palette, system dark mode with AMOLED, Josefin Sans, work-profile folder, clock, calendar, and your recorded Grace Button actions. The Horux icon pack is chosen only if installed and detected.</string>
+    <string name="acronix_migration_limit">This is not a full Grace data transfer: favorites, folders, shortcuts, widgets, account permissions and undocumented settings remain unchanged. Contact search still needs Android permission.</string>
+    <string name="acronix_migration_apply">Apply visible settings</string>
+    <string name="acronix_migration_confirm">Replace the equivalent Acronix settings with those seen in the recording? Your existing Grace Launcher will not be modified.</string>
+    <string name="acronix_migration_applied">Profile requested. Check the appearance and grant any necessary permissions in Android.</string>
 </resources>
