@@ -84,7 +84,7 @@ internal enum class SettingsPage {
     GraceButtonAppearance, GraceButtonPosition, AgendaAppearance, SearchAppearance, MediaPlayerAppearance,
     WidgetScreen, WidgetScreenEditor, Homepage, AppList, FeedScreen, StatusScreen, DigitalWellbeing, TabletsFoldables,
     Wallpaper, WallpaperDesigner,
-    AppCategories, CategoryEditor, TasksOrg, TaskLists,
+    AppCategories, CategoryEditor, TasksOrg, TaskLists, AcronixMigration,
 }
 
 /** The window's existing system-bar owner follows the active settings surface. */
@@ -217,6 +217,7 @@ fun LauncherSettingsScreen(
                 if (!storage.canEdit) {
                     SettingsScaffold(stringResource(R.string.settings_title), "settings_storage_blocked", back) { }
                 } else when (page) {
+                    SettingsPage.AcronixMigration -> GraceVideoMigrationSettings(uiState, actions, back)
                     SettingsPage.Root -> SettingsHome(uiState.isDefaultHome, actions.requestDefaultHome,
                         onOpenHome = { if (isCurrent()) actions.openHome() }, onBack = back, navigate = navigate)
                     SettingsPage.Productivity -> ProductivitySettings(uiState, actions, back, navigate)
@@ -415,6 +416,7 @@ private fun SettingsHome(
     val showDefaultHomeBanner = isDefaultHome == false
     val languageTag by rememberAppLanguage()
     val categories = buildList {
+        add(SettingsPage.AcronixMigration to LauncherSymbol.Settings)
         add(SettingsPage.Productivity to LauncherSymbol.Star)
         add(SettingsPage.Themes to LauncherSymbol.Palette)
         add(SettingsPage.Advanced to LauncherSymbol.Settings)
@@ -433,6 +435,7 @@ private fun SettingsHome(
             categories.forEachIndexed { index, (page, symbol) ->
                 item(key = page.name) {
                     val title = when (page) {
+                        SettingsPage.AcronixMigration -> R.string.acronix_migration_title
                         SettingsPage.Productivity -> R.string.settings_productivity
                         SettingsPage.Themes -> R.string.settings_themes
                         SettingsPage.Advanced -> R.string.settings_advanced
@@ -440,6 +443,7 @@ private fun SettingsHome(
                         else -> R.string.settings_about
                     }
                     val summary = when (page) {
+                        SettingsPage.AcronixMigration -> stringResource(R.string.acronix_migration_summary)
                         SettingsPage.Productivity -> stringResource(R.string.settings_productivity_summary)
                         SettingsPage.Themes -> stringResource(R.string.settings_themes_summary)
                         SettingsPage.Advanced -> stringResource(R.string.settings_advanced_summary)
