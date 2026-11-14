@@ -46,6 +46,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.galaxyrio.gracelauncher.R
 import com.galaxyrio.gracelauncher.data.*
+import com.galaxyrio.gracelauncher.platform.DeviceSettingsSearch
+import com.galaxyrio.gracelauncher.platform.DeviceSettingMatch
 import com.galaxyrio.gracelauncher.platform.SearchLauncher
 import com.galaxyrio.gracelauncher.ui.LauncherActions
 import com.galaxyrio.gracelauncher.ui.LauncherUiState
@@ -64,6 +66,9 @@ private sealed interface SearchResult {
     val key: String
     data class App(val app: LauncherApp) : SearchResult { override val key = "app:" + app.key }
     data class Contact(val contact: SearchContact) : SearchResult { override val key = "contact:" + contact.id }
+    data class Device(val setting: DeviceSettingMatch) : SearchResult {
+        override val key = "device:" + setting.id
+    }
     data object Internet : SearchResult { override val key = "search_internet_result" }
 }
 
@@ -126,10 +131,19 @@ internal fun AppSearchScreen(
             val matchedContacts = if (settings.contacts && hasContactsAccess) contacts.mapNotNull { contact ->
                 contact.score(term)?.let { it to contact }
             }.sortedBy { it.first } else emptyList()
+            val matchedDevice = if (settings.deviceSettings) {
+                DeviceSettingsSearch.find(context, query)
+            } else emptyList()
             buildList {
-                matchedApps.forEach { add(SearchResult.App(it.second)) }
-                matchedContacts.forEach { add(SearchResult.Contact(it.second)) }
-                if (settings.internet) add(SearchResult.Internet)
+                // Search categories are grouped, but users choose their precedence.
+                settings.resultOrder.distinct().plus(SearchCategory.entries).distinct().forEach { category ->
+                    when (category) {
+                        SearchCategory.Apps -> matchedApps.forEach { add(SearchResult.App(it.second)) }
+                        SearchCategory.Contacts -> matchedContacts.forEach { add(SearchResult.Contact(it.second)) }
+                        SearchCategory.DeviceSettings -> matchedDevice.forEach { add(SearchResult.Device(it)) }
+                        SearchCategory.Internet -> if (settings.internet) add(SearchResult.Internet)
+                    }
+                }
             }
         }
     }
@@ -143,6 +157,7 @@ internal fun AppSearchScreen(
             else -> {
                 val opened = when (result) {
                     is SearchResult.Contact -> SearchLauncher.contact(context, result.contact)
+                    is SearchResult.Device -> DeviceSettingsSearch.open(context, result.setting)
                     SearchResult.Internet -> SearchLauncher.internet(context, query, settings)
                 }
                 if (opened) onDismiss() else Toast.makeText(context, R.string.app_unavailable, Toast.LENGTH_SHORT).show()
@@ -190,6 +205,7 @@ internal fun AppSearchScreen(
                 val label = when (result) {
                     is SearchResult.App -> result.app.label
                     is SearchResult.Contact -> result.contact.name
+                    is SearchResult.Device -> result.setting.label
                     SearchResult.Internet -> stringResource(R.string.search_internet_result)
                 }
                 val resultDisplay = (result as? SearchResult.App)?.app?.effectiveDisplay(appearance)
@@ -199,6 +215,12 @@ internal fun AppSearchScreen(
                     when (result) {
                         is SearchResult.App -> AppIcon(result.app, iconModifier, size = 40.dp, display = resultDisplay!!)
                         is SearchResult.Contact -> ContactAvatar(result.contact, contactsSource, iconModifier)
+                        is SearchResult.Device -> Surface(modifier = iconModifier.size(40.dp), shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(painterResource(R.drawable.ms_settings), null, Modifier.size(24.dp))
+                            }
+                        }
                         SearchResult.Internet -> Surface(modifier = iconModifier.size(40.dp), shape = CircleShape,
                             color = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer) {
                             Box(contentAlignment = Alignment.Center) { Icon(painterResource(R.drawable.ms_travel_explore), null, Modifier.size(24.dp)) }
