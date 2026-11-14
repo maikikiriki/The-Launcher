@@ -1186,4 +1186,25 @@
     <string name="agenda_choose_create_action">Choose what to add</string>
     <string name="agenda_new_task">New task</string>
     <string name="agenda_unsaved_message">Your agenda changes haven’t been saved.</string>
+
+    <!-- Acronix: configurable search ordering and device settings shortcuts. -->
+    <string name="acronix_search_order">Search result order</string>
+    <string name="acronix_search_apps">Applications</string>
+    <string name="acronix_search_contacts">Contacts</string>
+    <string name="acronix_search_web">Web searches</string>
+    <string name="acronix_search_device">Device settings</string>
+    <string name="acronix_device_settings">Search device settings</string>
+    <string name="acronix_device_settings_summary">Show matching Android settings directly in search</string>
+    <string name="acronix_device_developer">Developer options</string>
+    <string name="acronix_device_wifi">Wi-Fi settings</string>
+    <string name="acronix_device_bluetooth">Bluetooth settings</string>
+    <string name="acronix_device_display">Display settings</string>
+    <string name="acronix_device_battery">Battery saver</string>
+    <string name="acronix_device_apps">Applications settings</string>
+    <string name="acronix_device_notifications">Notification settings</string>
+    <string name="acronix_device_accessibility">Accessibility settings</string>
+    <string name="acronix_device_security">Security settings</string>
+    <string name="acronix_move_up">Move %1$s up</string>
+    <string name="acronix_move_down">Move %1$s down</string>
+    <string name="acronix_done">Done</string>
 </resources>
