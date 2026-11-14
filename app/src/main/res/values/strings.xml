@@ -1228,4 +1228,9 @@
     <string name="acronix_backup_busy">Processing backup…</string>
     <string name="acronix_backup_confirm_title">Restore Acronix backup?</string>
     <string name="acronix_backup_confirm">This replaces the current Acronix settings, favorites and local icon and font files. Export the current configuration first. Grace Launcher remains untouched.</string>
+
+    <string name="acronix_retry_widget">Try widget again</string>
+    <string name="acronix_repair_widget">Open widget editor</string>
+    <string name="acronix_notifications_title">Notifications</string>
+    <string name="acronix_notifications_empty">No notifications to show. Grant notification access to Acronix (full build) if you want to view notifications here.</string>
 </resources>
