@@ -31,7 +31,7 @@ internal object DeviceSettingsSearch {
             "seguridad security bloqueo pantalla lock"),
         Destination("accessibility", R.string.acronix_device_accessibility, Settings.ACTION_ACCESSIBILITY_SETTINGS,
             "accesibilidad accessibility lector pantalla"),
-        Destination("notifications", R.string.acronix_device_notifications, Settings.ACTION_APP_NOTIFICATION_SETTINGS,
+        Destination("notifications", R.string.acronix_device_notifications, Settings.ACTION_NOTIFICATION_SETTINGS,
             "notificaciones avisos notifications"),
     )
 
