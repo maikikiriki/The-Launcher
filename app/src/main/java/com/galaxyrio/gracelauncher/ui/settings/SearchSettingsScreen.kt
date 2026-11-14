@@ -32,6 +32,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.galaxyrio.gracelauncher.R
 import com.galaxyrio.gracelauncher.data.SearchContacts
+import com.galaxyrio.gracelauncher.data.SearchCategory
 import com.galaxyrio.gracelauncher.data.SearchEngine
 import com.galaxyrio.gracelauncher.data.SearchSettings
 import com.galaxyrio.gracelauncher.platform.SearchLauncher
@@ -114,7 +115,63 @@ internal fun SearchSettingsScreen(uiState: LauncherUiState, actions: LauncherAct
             }
             item {
                 SettingsToggleItem(stringResource(R.string.search_hidden_apps), stringResource(R.string.search_hidden_apps_summary),
-                    settings.hiddenApps, 5, 6, "search_hidden_apps", enabled = settings.enabled) { value -> update { it.copy(hiddenApps = value) } }
+                    settings.hiddenApps, 5, 7, "search_hidden_apps", enabled = settings.enabled) { value -> update { it.copy(hiddenApps = value) } }
+            }
+            item {
+                SettingsToggleItem(stringResource(R.string.acronix_search_device_enabled),
+                    stringResource(R.string.acronix_search_device_summary),
+                    settings.deviceSettings, 6, 7, "search_device_settings", enabled = settings.enabled) { value ->
+                    update { it.copy(deviceSettings = value) }
+                }
+            }
+            item {
+                Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp)) {
+                    Text(stringResource(R.string.acronix_search_order), style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(4.dp))
+                    Text(stringResource(R.string.acronix_search_order_summary),
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.height(8.dp))
+                    settings.resultOrder.forEachIndexed { index, category ->
+                        val label = stringResource(when (category) {
+                            SearchCategory.Apps -> R.string.acronix_search_section_apps
+                            SearchCategory.Contacts -> R.string.acronix_search_section_contacts
+                            SearchCategory.DeviceSettings -> R.string.acronix_search_section_device
+                            SearchCategory.Internet -> R.string.acronix_search_section_internet
+                        })
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Text(label, Modifier.weight(1f))
+                            TextButton(onClick = {
+                                update { current ->
+                                    val order = current.resultOrder.toMutableList()
+                                    if (index in 1 until order.size) {
+                                        val item = order.removeAt(index)
+                                        order.add(index - 1, item)
+                                    }
+                                    current.copy(resultOrder = order)
+                                }
+                            }, enabled = settings.enabled && index > 0 && LocalSettingsStorageState.current.canEdit) {
+                                Text("↑", modifier = Modifier.semantics {
+                                    contentDescription = context.getString(R.string.acronix_search_move_up) + ": " + label
+                                })
+                            }
+                            TextButton(onClick = {
+                                update { current ->
+                                    val order = current.resultOrder.toMutableList()
+                                    if (index >= 0 && index < order.lastIndex) {
+                                        val item = order.removeAt(index)
+                                        order.add(index + 1, item)
+                                    }
+                                    current.copy(resultOrder = order)
+                                }
+                            }, enabled = settings.enabled && index < settings.resultOrder.lastIndex &&
+                                LocalSettingsStorageState.current.canEdit) {
+                                Text("↓", modifier = Modifier.semantics {
+                                    contentDescription = context.getString(R.string.acronix_search_move_down) + ": " + label
+                                })
+                            }
+                        }
+                    }
+                }
             }
         }
     }
