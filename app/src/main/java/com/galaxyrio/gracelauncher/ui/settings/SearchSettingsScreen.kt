@@ -34,6 +34,7 @@ import com.galaxyrio.gracelauncher.R
 import com.galaxyrio.gracelauncher.data.SearchContacts
 import com.galaxyrio.gracelauncher.data.SearchEngine
 import com.galaxyrio.gracelauncher.data.SearchSettings
+import com.galaxyrio.gracelauncher.data.SearchResultCategory
 import com.galaxyrio.gracelauncher.platform.SearchLauncher
 import com.galaxyrio.gracelauncher.ui.LauncherActions
 import com.galaxyrio.gracelauncher.ui.LauncherUiState
@@ -46,6 +47,7 @@ internal fun SearchSettingsScreen(uiState: LauncherUiState, actions: LauncherAct
     var hasAccess by remember { mutableStateOf(contacts.hasAccess()) }
     var permissionRequested by rememberSaveable { mutableStateOf(false) }
     var engineDialog by rememberSaveable { mutableStateOf<String?>(null) }
+    var orderDialog by rememberSaveable { mutableStateOf(false) }
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(lifecycle, contacts) {
         val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_RESUME) hasAccess = contacts.hasAccess() }
@@ -53,6 +55,19 @@ internal fun SearchSettingsScreen(uiState: LauncherUiState, actions: LauncherAct
         onDispose { lifecycle.removeObserver(observer) }
     }
     fun update(change: (SearchSettings) -> SearchSettings) = actions.updateSettings { it.copy(search = change(it.search)) }
+    fun moveCategory(category: SearchResultCategory, step: Int) {
+        update { current ->
+            val order = SearchResultCategory.normalized(current.resultOrder).toMutableList()
+            val from = order.indexOf(category)
+            val to = from + step
+            if (from >= 0 && to in order.indices) {
+                val item = order[from]
+                order[from] = order[to]
+                order[to] = item
+            }
+            current.copy(resultOrder = order)
+        }
+    }
     fun permissionResult(granted: Boolean) {
         hasAccess = granted
         update { it.copy(contacts = granted) }
@@ -116,7 +131,47 @@ internal fun SearchSettingsScreen(uiState: LauncherUiState, actions: LauncherAct
                 SettingsToggleItem(stringResource(R.string.search_hidden_apps), stringResource(R.string.search_hidden_apps_summary),
                     settings.hiddenApps, 5, 6, "search_hidden_apps", enabled = settings.enabled) { value -> update { it.copy(hiddenApps = value) } }
             }
+            item {
+                SettingsToggleItem(stringResource(R.string.acronix_device_settings), stringResource(R.string.acronix_device_settings_summary),
+                    settings.deviceSettings, 6, 8, "acronix_device_settings", enabled = settings.enabled) { value ->
+                    update { it.copy(deviceSettings = value) }
+                }
+            }
+            item {
+                SettingsActionItem(stringResource(R.string.acronix_search_order),
+                    SearchResultCategory.normalized(settings.resultOrder).joinToString(" · ") { context.getString(it.labelResource()) },
+                    7, 8, "acronix_search_order", enabled = settings.enabled,
+                    onClick = { orderDialog = true })
+            }
         }
+    }
+    if (orderDialog) {
+        val order = SearchResultCategory.normalized(settings.resultOrder)
+        AlertDialog(
+            onDismissRequest = { orderDialog = false },
+            title = { Text(stringResource(R.string.acronix_search_order)) },
+            text = {
+                Column(Modifier.fillMaxWidth().testTag("acronix_search_order_dialog")) {
+                    order.forEachIndexed { index, category ->
+                        val title = stringResource(category.labelResource())
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            Text(title, modifier = Modifier.weight(1f))
+                            TextButton(onClick = { moveCategory(category, -1) }, enabled = index > 0) {
+                                Text("↑", modifier = Modifier.semantics {
+                                    contentDescription = context.getString(R.string.acronix_move_up, title)
+                                })
+                            }
+                            TextButton(onClick = { moveCategory(category, +1) }, enabled = index < order.lastIndex) {
+                                Text("↓", modifier = Modifier.semantics {
+                                    contentDescription = context.getString(R.string.acronix_move_down, title)
+                                })
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = { TextButton(onClick = { orderDialog = false }) { Text(stringResource(R.string.acronix_done)) } },
+        )
     }
     when (engineDialog) {
         "select" -> SettingsSelectionDialog(
@@ -185,4 +240,11 @@ private fun CustomSearchEngineDialog(settings: SearchSettings, onSave: (String, 
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.settings_cancel)) } },
     )
+}
+
+private fun SearchResultCategory.labelResource(): Int = when (this) {
+    SearchResultCategory.Apps -> R.string.acronix_search_apps
+    SearchResultCategory.Contacts -> R.string.acronix_search_contacts
+    SearchResultCategory.Web -> R.string.acronix_search_web
+    SearchResultCategory.Device -> R.string.acronix_search_device
 }
