@@ -15,6 +15,10 @@ on:
       - 'build.gradle.kts'
       - '.github/workflows/acronix-apk.yml'
 
+concurrency:
+  group: acronix-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
