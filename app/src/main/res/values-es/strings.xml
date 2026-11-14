@@ -1190,4 +1190,9 @@
     <string name="acronix_backup_busy">Procesando copia…</string>
     <string name="acronix_backup_confirm_title">¿Restaurar copia de Acronix?</string>
     <string name="acronix_backup_confirm">Se sustituirán la configuración actual, los favoritos y los archivos locales de iconos y fuentes de Acronix. Exporta antes tu configuración actual. Grace Launcher no se modificará.</string>
+
+    <string name="acronix_retry_widget">Reintentar widget</string>
+    <string name="acronix_repair_widget">Abrir editor de widgets</string>
+    <string name="acronix_notifications_title">Notificaciones</string>
+    <string name="acronix_notifications_empty">No hay notificaciones para mostrar. Autoriza el acceso a notificaciones de Acronix (versión completa) para verlas aquí.</string>
 </resources>
