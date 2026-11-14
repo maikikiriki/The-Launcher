@@ -1169,4 +1169,12 @@
     <string name="acronix_move_up">Subir %1$s</string>
     <string name="acronix_move_down">Bajar %1$s</string>
     <string name="acronix_done">Listo</string>
+
+    <string name="acronix_migration_title">Configuración del vídeo de Grace</string>
+    <string name="acronix_migration_summary">Aplicar los ajustes visibles en tu vídeo de Grace Launcher.</string>
+    <string name="acronix_migration_details">Colores dinámicos, paleta Vibrante, modo oscuro del sistema con AMOLED, Josefin Sans, carpeta del perfil de trabajo, reloj, agenda y acciones del botón Grace que aparecen en el vídeo. Se seleccionarán los iconos Horux solo si están instalados y se detectan.</string>
+    <string name="acronix_migration_limit">No es una transferencia completa: favoritos, carpetas, accesos directos, widgets, permisos de cuentas y ajustes no visibles permanecen como estaban. Buscar contactos requiere permiso de Android.</string>
+    <string name="acronix_migration_apply">Aplicar ajustes visibles</string>
+    <string name="acronix_migration_confirm">¿Quieres sustituir los ajustes equivalentes de Acronix por los del vídeo? No se modificará Grace Launcher.</string>
+    <string name="acronix_migration_applied">Configuración aplicada. Revisa la apariencia y autoriza los permisos necesarios en Android.</string>
 </resources>
