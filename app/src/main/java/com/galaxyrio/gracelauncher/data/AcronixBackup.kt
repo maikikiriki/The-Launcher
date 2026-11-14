@@ -50,34 +50,61 @@ object AcronixBackup {
     }
 
     private fun exportTo(context: Context, output: OutputStream) {
+        // Database rows share a transaction. Preferences and assets are separate stores;
+        // this is not yet a globally atomic snapshot and restoration remains disabled.
         val db = LauncherDatabase.getInstance(context).openHelper.writableDatabase
-        val data = JSONObject()
-            .put("format", "acronix-backup")
-            .put("version", VERSION)
-            .put("dbVersion", 34)
-            .put("tables", exportTables(db))
+        db.beginTransaction()
+        val rows = try {
+            exportTables(db).also { db.setTransactionSuccessful() }
+        } finally { db.endTransaction() }
+        val data = JSONObject().put("format", "acronix-backup").put("version", 2)
+            .put("dbVersion", 34).put("tables", rows)
             .put("preferences", exportPreferences(context))
-        val bytes = data.toString().toByteArray(Charsets.UTF_8)
-        require(bytes.size.toLong() <= MAX_FILE)
-        val checksum = sha256(bytes)
-        val meta = JSONObject().put("format", "acronix-backup")
-            .put("version", VERSION).put("checksum", checksum)
-            .put("createdAt", System.currentTimeMillis())
-            .put("android", Build.VERSION.SDK_INT)
-        ZipOutputStream(output.buffered()).use { zip ->
-            fun add(name: String, source: InputStream) {
-                zip.putNextEntry(ZipEntry(name))
-                source.use { input -> copyLimited(input, zip, MAX_FILE) }
-                zip.closeEntry()
-            }
-            add("manifest.json", meta.toString().byteInputStream(Charsets.UTF_8))
-            add(DATA_ENTRY, bytes.inputStream())
-            for (directory in assetDirs) {
-                val dir = File(context.filesDir, directory)
-                dir.listFiles().orEmpty().filter { it.isFile && safeFileName(it.name) }.forEach { file ->
-                    if (file.length() <= MAX_FILE) add("files/$directory/${file.name}", file.inputStream())
+        val archive = File.createTempFile("acronix_export_", ".zip", context.cacheDir)
+        try {
+            val expected = linkedMapOf<String, BackupArchiveIntegrity.Entry>()
+            var total = 0L
+            ZipOutputStream(archive.outputStream().buffered()).use { zip ->
+                fun add(name: String, source: InputStream) {
+                    require(expected.size < 4095) { "Too many backup files" }
+                    val digest = MessageDigest.getInstance("SHA-256")
+                    var size = 0L
+                    zip.putNextEntry(ZipEntry(name))
+                    source.use { input ->
+                        val buffer = ByteArray(8192)
+                        while (true) {
+                            val count = input.read(buffer)
+                            if (count < 0) break
+                            size += count; total += count
+                            require(size <= MAX_FILE && total <= MAX_BYTES) { "Backup exceeds size limit" }
+                            digest.update(buffer, 0, count)
+                            zip.write(buffer, 0, count)
+                        }
+                    }
+                    zip.closeEntry()
+                    expected[name] = BackupArchiveIntegrity.Entry(size, digest.digest()
+                        .joinToString("") { "%02x".format(it.toInt() and 0xff) })
                 }
+                add(DATA_ENTRY, data.toString().byteInputStream(Charsets.UTF_8))
+                for (directory in assetDirs) {
+                    File(context.filesDir, directory).listFiles().orEmpty()
+                        .filter { it.isFile && safeFileName(it.name) }.forEach { file ->
+                            // Fail instead of silently omitting an oversized resource.
+                            add("files/$directory/${file.name}", file.inputStream())
+                        }
+                }
+                val entries = JSONObject()
+                expected.forEach { (name, entry) -> entries.put(name,
+                    JSONObject().put("size", entry.size).put("sha256", entry.sha256)) }
+                val manifest = JSONObject().put("format", "acronix-backup").put("version", 2)
+                    .put("createdAt", System.currentTimeMillis()).put("android", Build.VERSION.SDK_INT)
+                    .put("dbVersion", 34).put("entries", entries)
+                add("manifest.json", manifest.toString().byteInputStream(Charsets.UTF_8))
             }
+            archive.inputStream().use { BackupArchiveIntegrity.verify(it, expected, MAX_FILE, MAX_BYTES, 4096) }
+            archive.inputStream().use { it.copyTo(output) }
+        } finally {
+            archive.delete()
         }
     }
 
