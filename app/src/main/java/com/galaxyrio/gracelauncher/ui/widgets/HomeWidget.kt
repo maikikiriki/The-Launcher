@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -67,6 +68,9 @@ internal fun rememberWidgetHost(): WidgetHostState {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_START -> start()
+                // Revalidate after returning from a widget provider update or an Android
+                // settings/Contacts repair. One on-resume read, never a polling loop.
+                Lifecycle.Event.ON_RESUME -> state.revision++
                 Lifecycle.Event.ON_STOP -> runCatching { host.stopListening() }
                 else -> Unit
             }
@@ -114,7 +118,8 @@ internal fun HomeWidget(
     var size by remember { mutableStateOf(IntSize.Zero) }
     var coordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     var view by remember(layout.widgetId) { mutableStateOf<HomeWidgetHostView?>(null) }
-    var creationFailed by remember(layout.widgetId, widget.info) { mutableStateOf(false) }
+    var retryNonce by remember(layout.widgetId) { mutableIntStateOf(0) }
+    var creationFailed by remember(layout.widgetId, widget.info, retryNonce) { mutableStateOf(false) }
     val scale = contentScale.coerceIn(.5f, 1.5f)
     // The slot never changes size. Measure RemoteViews in inverse-scaled space,
     // then scale its entire contents (including touch coordinates) into that slot.
@@ -149,9 +154,18 @@ internal fun HomeWidget(
         } else modifier.combinedClickable(enabled = enabled && !editing, onClick = onLongPress, onLongClick = onLongPress)
         Surface(fallback,
             shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainer) {
-            Text(stringResource(R.string.widget_unavailable), Modifier.padding(20.dp))
+            Column(Modifier.padding(12.dp)) {
+                Text(stringResource(R.string.widget_unavailable))
+                TextButton(onClick = {
+                    if (widget.info != null && creationFailed) retryNonce++
+                    else latestLongPress()
+                }, enabled = enabled && !editing) {
+                    Text(stringResource(if (widget.info != null && creationFailed)
+                        R.string.acronix_retry_widget else R.string.acronix_repair_widget))
+                }
+            }
         }
-    } else key(layout.widgetId, widget.info.provider) {
+    } else key(layout.widgetId, widget.info.provider, retryNonce) {
         AndroidView(
             modifier = modifier,
             factory = { context ->
