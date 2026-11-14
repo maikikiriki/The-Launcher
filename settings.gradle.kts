@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Grace Launcher"
+rootProject.name = "Acronix Launcher"
 include(":app")
