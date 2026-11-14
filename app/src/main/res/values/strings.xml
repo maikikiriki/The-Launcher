@@ -1215,4 +1215,17 @@
     <string name="acronix_migration_apply">Apply visible settings</string>
     <string name="acronix_migration_confirm">Replace the equivalent Acronix settings with those seen in the recording? Your existing Grace Launcher will not be modified.</string>
     <string name="acronix_migration_applied">Profile requested. Check the appearance and grant any necessary permissions in Android.</string>
+
+    <string name="acronix_backup_title">Backup and transfer</string>
+    <string name="acronix_backup_summary">Import, export or share your Acronix configuration, favorites, folders, icons and local fonts.</string>
+    <string name="acronix_backup_warning">Backups can contain sensitive personal information and are not encrypted. Keep them private. Backups belong to Acronix; they cannot automatically read original Grace data. Android widget permissions may need to be renewed after restoring.</string>
+    <string name="acronix_backup_export">Export backup</string>
+    <string name="acronix_backup_import">Import backup</string>
+    <string name="acronix_backup_share">Share backup</string>
+    <string name="acronix_backup_saved">Backup exported successfully.</string>
+    <string name="acronix_backup_restored">Backup imported. Close and reopen Acronix to refresh all views. Some widgets may need new authorization.</string>
+    <string name="acronix_backup_error">Backup failed</string>
+    <string name="acronix_backup_busy">Processing backup…</string>
+    <string name="acronix_backup_confirm_title">Restore Acronix backup?</string>
+    <string name="acronix_backup_confirm">This replaces the current Acronix settings, favorites and local icon and font files. Export the current configuration first. Grace Launcher remains untouched.</string>
 </resources>
