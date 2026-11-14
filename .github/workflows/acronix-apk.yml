@@ -33,11 +33,22 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Configurar Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Instalar Android SDK 37 y Build Tools 36.1
-        run: sdkmanager --install 'platforms;android-37' 'build-tools;36.1.0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          if command -v sdkmanager >/dev/null 2>&1; then
+            SDKMANAGER="$(command -v sdkmanager)"
+          else
+            SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -type f -name sdkmanager | sort -V | tail -n 1)"
+          fi
+          if [ -z "$SDKMANAGER" ]; then
+            echo "::error::Android SDK manager no encontrado en el runner"
+            exit 1
+          fi
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" --install 'platforms;android-37' 'build-tools;36.1.0'
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
