@@ -58,10 +58,10 @@ jobs:
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Compilar APK de prueba
+      - name: Compilar APK de prueba (estandar y completa)
         run: |
           chmod +x ./gradlew
-          ./gradlew :app:assembleDebug --stacktrace --no-daemon
+          ./gradlew :app:assembleDebug :app:assembleFullDebug --stacktrace --no-daemon
 
       - name: Verificar servicios sensibles excluidos del APK de pruebas
         shell: bash
@@ -75,13 +75,22 @@ jobs:
             echo "::error::El APK de pruebas sigue declarando servicios sensibles"
             exit 1
           fi
-          echo "Verificado: el APK no declara servicios de accesibilidad ni listener de notificaciones."
+          echo "Verificado: la variante estandar no declara servicios sensibles."\n          FULL="app/build/outputs/apk/fullDebug/app-fullDebug.apk"\n          "$AAPT" dump xmltree "$FULL" AndroidManifest.xml > full-manifest.txt\n          grep -q BIND_ACCESSIBILITY_SERVICE full-manifest.txt || { echo "::error::Falta el servicio de accesibilidad en la variante completa"; exit 1; }\n          grep -q BIND_NOTIFICATION_LISTENER_SERVICE full-manifest.txt || { echo "::error::Falta el servicio de notificaciones en la variante completa"; exit 1; }\n          echo "Verificado: la variante completa declara ambos servicios con permisos especiales de Android."
 
       - name: Guardar APK para descargar
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Acronix-Launcher-v0.1.2-debug
+          name: Acronix-Launcher-v0.1.3-estandar
           path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Guardar APK con accesibilidad y notificaciones
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Acronix-Launcher-v0.1.3-completo
+          path: app/build/outputs/apk/fullDebug/app-fullDebug.apk
           if-no-files-found: error
           retention-days: 30
