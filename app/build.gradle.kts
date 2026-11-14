@@ -27,6 +27,12 @@ android {
                 enable = true
             }
         }
+        create("fullDebug") {
+            initWith(getByName("debug"))
+            matchingFallbacks += listOf("debug")
+            // Only this opt-in build declares the Accessibility and Notification services.
+            // Android still requires the user to grant each service explicitly.
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
