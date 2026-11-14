@@ -1148,4 +1148,25 @@
     <string name="agenda_today_heading">Hoy</string>
     <string name="agenda_choose_create_action">Elige qué añadir</string>
     <string name="agenda_daily_content">Contenido diario</string>
+
+    <!-- Acronix: orden de resultados y accesos a ajustes del dispositivo. -->
+    <string name="acronix_search_order">Orden de los resultados</string>
+    <string name="acronix_search_apps">Aplicaciones</string>
+    <string name="acronix_search_contacts">Contactos</string>
+    <string name="acronix_search_web">Búsquedas web</string>
+    <string name="acronix_search_device">Ajustes del dispositivo</string>
+    <string name="acronix_device_settings">Buscar ajustes del dispositivo</string>
+    <string name="acronix_device_settings_summary">Mostrar ajustes de Android que coincidan con la búsqueda</string>
+    <string name="acronix_device_developer">Opciones de desarrollador</string>
+    <string name="acronix_device_wifi">Ajustes de Wi-Fi</string>
+    <string name="acronix_device_bluetooth">Ajustes de Bluetooth</string>
+    <string name="acronix_device_display">Ajustes de pantalla</string>
+    <string name="acronix_device_battery">Ahorro de batería</string>
+    <string name="acronix_device_apps">Ajustes de aplicaciones</string>
+    <string name="acronix_device_notifications">Ajustes de notificaciones</string>
+    <string name="acronix_device_accessibility">Ajustes de accesibilidad</string>
+    <string name="acronix_device_security">Ajustes de seguridad</string>
+    <string name="acronix_move_up">Subir %1$s</string>
+    <string name="acronix_move_down">Bajar %1$s</string>
+    <string name="acronix_done">Listo</string>
 </resources>
