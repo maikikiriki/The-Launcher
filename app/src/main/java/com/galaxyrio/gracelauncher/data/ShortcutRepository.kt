@@ -137,7 +137,14 @@ class ShortcutRepository(context: Context) : AutoCloseable {
                         LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED,
                 )
             val shortcuts = launcherApps.getShortcuts(query, key.user).orEmpty()
-                .filter { it.isEnabled && (it.activity == null || it.activity?.flattenToString() == key.activity) }
+                .filter { info ->
+                    // Third-party browsers such as Vivaldi may change the owning Activity
+                    // when updating a pinned web shortcut. A pinned ID belongs to its
+                    // package/user and should not disappear merely because that Activity
+                    // differs from the app's current launcher component.
+                    info.isEnabled && (info.isPinned ||
+                        info.activity == null || info.activity?.flattenToString() == key.activity)
+                }
                 .distinctBy { it.id }
                 .sortedWith(compareBy({ !it.isDeclaredInManifest }, { it.rank }))
                 .map { info ->
