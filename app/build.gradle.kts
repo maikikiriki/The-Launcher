@@ -12,11 +12,11 @@ android {
     buildToolsVersion = "36.1.0"
 
     defaultConfig {
-        applicationId = "com.galaxyrio.gracelauncher"
+        applicationId = "com.acronix.launcher"
         minSdk = 28
         targetSdk = 37
-        versionCode = 16
-        versionName = "1.2.4"
+        versionCode = 1
+        versionName = "0.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
