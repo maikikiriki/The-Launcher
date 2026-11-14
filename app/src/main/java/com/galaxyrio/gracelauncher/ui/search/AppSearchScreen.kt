@@ -1,5 +1,7 @@
 package com.galaxyrio.gracelauncher.ui.search
 
+import android.content.Intent
+import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -65,7 +67,35 @@ private sealed interface SearchResult {
     data class App(val app: LauncherApp) : SearchResult { override val key = "app:" + app.key }
     data class Contact(val contact: SearchContact) : SearchResult { override val key = "contact:" + contact.id }
     data object Internet : SearchResult { override val key = "search_internet_result" }
+    data class Device(val target: DeviceSearchTarget) : SearchResult { override val key = "device:" + target.action }
 }
+
+/** Public Android settings intents only; no privileged APIs, background polling or permission requests. */
+private data class DeviceSearchTarget(val action: String, val label: String, val aliases: List<String>) {
+    fun score(query: SearchQuery): Int? = SearchNames(listOf(label) + aliases).score(query)
+}
+
+private fun deviceSearchTargets(context: android.content.Context): List<DeviceSearchTarget> = listOf(
+    DeviceSearchTarget(Settings.ACTION_APPLICATION_DEVELOPMENT_SETTINGS,
+        context.getString(R.string.acronix_device_developer),
+        listOf("desarrollador", "desarrollo", "opciones de desarrollador", "developer", "developer options")),
+    DeviceSearchTarget(Settings.ACTION_WIFI_SETTINGS, context.getString(R.string.acronix_device_wifi),
+        listOf("wifi", "wi-fi", "red inalambrica", "wireless", "internet")),
+    DeviceSearchTarget(Settings.ACTION_BLUETOOTH_SETTINGS, context.getString(R.string.acronix_device_bluetooth),
+        listOf("bluetooth", "dispositivos conectados")),
+    DeviceSearchTarget(Settings.ACTION_DISPLAY_SETTINGS, context.getString(R.string.acronix_device_display),
+        listOf("pantalla", "brillo", "display", "brightness")),
+    DeviceSearchTarget(Settings.ACTION_BATTERY_SAVER_SETTINGS, context.getString(R.string.acronix_device_battery),
+        listOf("bateria", "ahorro bateria", "battery", "battery saver")),
+    DeviceSearchTarget(Settings.ACTION_APPLICATION_SETTINGS, context.getString(R.string.acronix_device_apps),
+        listOf("aplicaciones", "gestionar aplicaciones", "apps", "installed apps")),
+    DeviceSearchTarget(Settings.ACTION_NOTIFICATION_SETTINGS, context.getString(R.string.acronix_device_notifications),
+        listOf("notificaciones", "avisos", "notifications")),
+    DeviceSearchTarget(Settings.ACTION_ACCESSIBILITY_SETTINGS, context.getString(R.string.acronix_device_accessibility),
+        listOf("accesibilidad", "accessibility")),
+    DeviceSearchTarget(Settings.ACTION_SECURITY_SETTINGS, context.getString(R.string.acronix_device_security),
+        listOf("seguridad", "security")),
+)
 
 @Composable
 internal fun AppSearchScreen(
@@ -111,7 +141,8 @@ internal fun AppSearchScreen(
         uiState.allApps.filter { it.folderId == null && (settings.hiddenApps || it.key !in uiState.effectiveHiddenAppKeys) }
     }
     val names = rememberAppSearchNames(apps)
-    val results: List<SearchResult> = remember(apps, names, contacts, query, settings, hasContactsAccess) {
+    val deviceTargets = remember(context) { deviceSearchTargets(context) }
+    val results: List<SearchResult> = remember(apps, names, contacts, deviceTargets, query, settings, hasContactsAccess) {
         if (query.isEmpty()) {
             if (settings.suggestions) {
                 val byKey = apps.associateBy { it.key }
@@ -126,11 +157,16 @@ internal fun AppSearchScreen(
             val matchedContacts = if (settings.contacts && hasContactsAccess) contacts.mapNotNull { contact ->
                 contact.score(term)?.let { it to contact }
             }.sortedBy { it.first } else emptyList()
-            buildList {
-                matchedApps.forEach { add(SearchResult.App(it.second)) }
-                matchedContacts.forEach { add(SearchResult.Contact(it.second)) }
-                if (settings.internet) add(SearchResult.Internet)
-            }
+            val matchedDevice = if (settings.deviceSettings) deviceTargets.mapNotNull { target ->
+                target.score(term)?.let { score -> score to target }
+            }.sortedBy { it.first } else emptyList()
+            val grouped = mapOf(
+                SearchResultCategory.Apps to matchedApps.map { SearchResult.App(it.second) },
+                SearchResultCategory.Contacts to matchedContacts.map { SearchResult.Contact(it.second) },
+                SearchResultCategory.Web to (if (settings.internet) listOf(SearchResult.Internet) else emptyList()),
+                SearchResultCategory.Device to matchedDevice.map { SearchResult.Device(it.second) },
+            )
+            SearchResultCategory.normalized(settings.resultOrder).flatMap { grouped[it].orEmpty() }
         }
     }
     fun open(result: SearchResult, bounds: Rect? = null) {
@@ -144,6 +180,10 @@ internal fun AppSearchScreen(
                 val opened = when (result) {
                     is SearchResult.Contact -> SearchLauncher.contact(context, result.contact)
                     SearchResult.Internet -> SearchLauncher.internet(context, query, settings)
+                    is SearchResult.Device -> runCatching {
+                        context.startActivity(Intent(result.target.action))
+                        true
+                    }.getOrDefault(false)
                 }
                 if (opened) onDismiss() else Toast.makeText(context, R.string.app_unavailable, Toast.LENGTH_SHORT).show()
             }
@@ -191,6 +231,7 @@ internal fun AppSearchScreen(
                     is SearchResult.App -> result.app.label
                     is SearchResult.Contact -> result.contact.name
                     SearchResult.Internet -> stringResource(R.string.search_internet_result)
+                    is SearchResult.Device -> result.target.label
                 }
                 val resultDisplay = (result as? SearchResult.App)?.app?.effectiveDisplay(appearance)
                 SearchResultRow(label, result.key, first = index == 0, onClick = { open(result, it) },
@@ -202,6 +243,10 @@ internal fun AppSearchScreen(
                         SearchResult.Internet -> Surface(modifier = iconModifier.size(40.dp), shape = CircleShape,
                             color = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer) {
                             Box(contentAlignment = Alignment.Center) { Icon(painterResource(R.drawable.ms_travel_explore), null, Modifier.size(24.dp)) }
+                        }
+                        is SearchResult.Device -> Surface(modifier = iconModifier.size(40.dp), shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer) {
+                            Box(contentAlignment = Alignment.Center) { Icon(painterResource(R.drawable.ms_settings), null, Modifier.size(24.dp)) }
                         }
                     }
                 }
