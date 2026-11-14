@@ -1207,4 +1207,20 @@
     <string name="acronix_device_security">Security settings</string>
     <string name="acronix_device_accessibility">Accessibility settings</string>
     <string name="acronix_device_notifications">Notification settings</string>
+
+    <!-- Acronix backup management -->
+    <string name="acronix_backup_title">Import, export &amp; share</string>
+    <string name="acronix_backup_root_summary">Save and restore your Acronix settings.</string>
+    <string name="acronix_backup_export">Export backup</string>
+    <string name="acronix_backup_export_summary">Save settings, favorites, folders and local customization to a ZIP.</string>
+    <string name="acronix_backup_import">Import backup</string>
+    <string name="acronix_backup_import_summary">Restore a backup created by Acronix on this device or another.</string>
+    <string name="acronix_backup_share">Share backup</string>
+    <string name="acronix_backup_share_summary">Choose another app to send your backup file to.</string>
+    <string name="acronix_backup_success">Acronix backup saved</string>
+    <string name="acronix_backup_imported">Backup restored. Reopen Acronix to refresh all settings.</string>
+    <string name="acronix_backup_failure">The backup could not be processed</string>
+    <string name="acronix_backup_limitations">Only Acronix backups can be imported. Android-managed widget bindings, permissions and installed icon packs are not transferred. Backups may contain personal customization data: share only with trusted recipients.</string>
+    <string name="acronix_backup_confirm_title">Replace current settings?</string>
+    <string name="acronix_backup_confirm_message">Importing will replace your current Acronix configuration. Export a copy first. Widgets and system permissions may need to be configured again.</string>
 </resources>
