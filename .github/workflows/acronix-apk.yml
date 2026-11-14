@@ -79,7 +79,12 @@ jobs:
             echo "::error::El APK de pruebas sigue declarando servicios sensibles"
             exit 1
           fi
-          echo "Verificado: la variante estandar no declara servicios sensibles."\n          FULL="app/build/outputs/apk/fullDebug/app-fullDebug.apk"\n          "$AAPT" dump xmltree "$FULL" AndroidManifest.xml > full-manifest.txt\n          grep -q BIND_ACCESSIBILITY_SERVICE full-manifest.txt || { echo "::error::Falta el servicio de accesibilidad en la variante completa"; exit 1; }\n          grep -q BIND_NOTIFICATION_LISTENER_SERVICE full-manifest.txt || { echo "::error::Falta el servicio de notificaciones en la variante completa"; exit 1; }\n          echo "Verificado: la variante completa declara ambos servicios con permisos especiales de Android."
+          echo "Verificado: la variante estandar no declara servicios sensibles."
+          FULL="app/build/outputs/apk/fullDebug/app-fullDebug.apk"
+          "$AAPT" dump xmltree "$FULL" AndroidManifest.xml > full-manifest.txt
+          grep -q BIND_ACCESSIBILITY_SERVICE full-manifest.txt || { echo "::error::Falta el servicio de accesibilidad en la variante completa"; exit 1; }
+          grep -q BIND_NOTIFICATION_LISTENER_SERVICE full-manifest.txt || { echo "::error::Falta el servicio de notificaciones en la variante completa"; exit 1; }
+          echo "Verificado: la variante completa declara ambos servicios con permisos especiales de Android."
 
       - name: Guardar APK para descargar
         if: success()
