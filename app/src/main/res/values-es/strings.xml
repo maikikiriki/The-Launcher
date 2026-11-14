@@ -1169,4 +1169,20 @@
     <string name="acronix_device_security">Ajustes de seguridad</string>
     <string name="acronix_device_accessibility">Ajustes de accesibilidad</string>
     <string name="acronix_device_notifications">Ajustes de notificaciones</string>
+
+    <!-- Acronix backup management -->
+    <string name="acronix_backup_title">Importar, exportar y compartir</string>
+    <string name="acronix_backup_root_summary">Guarda y recupera la configuración de Acronix.</string>
+    <string name="acronix_backup_export">Exportar copia</string>
+    <string name="acronix_backup_export_summary">Guarda ajustes, favoritos, carpetas y personalización local en un ZIP.</string>
+    <string name="acronix_backup_import">Importar copia</string>
+    <string name="acronix_backup_import_summary">Restaura una copia creada por Acronix en este u otro dispositivo.</string>
+    <string name="acronix_backup_share">Compartir copia</string>
+    <string name="acronix_backup_share_summary">Elige otra aplicación para enviar la copia de configuración.</string>
+    <string name="acronix_backup_success">Copia de Acronix guardada</string>
+    <string name="acronix_backup_imported">Copia restaurada. Vuelve a abrir Acronix para actualizar todos los ajustes.</string>
+    <string name="acronix_backup_failure">No se pudo procesar la copia</string>
+    <string name="acronix_backup_limitations">Solo se pueden importar copias de Acronix. Los widgets gestionados por Android, los permisos y los paquetes de iconos instalados no se transfieren. El ZIP puede contener datos personales: compártelo solo con personas de confianza.</string>
+    <string name="acronix_backup_confirm_title">¿Sustituir los ajustes actuales?</string>
+    <string name="acronix_backup_confirm_message">Importar sustituirá la configuración actual de Acronix. Exporta una copia antes. Es posible que debas volver a configurar widgets y permisos del sistema.</string>
 </resources>
