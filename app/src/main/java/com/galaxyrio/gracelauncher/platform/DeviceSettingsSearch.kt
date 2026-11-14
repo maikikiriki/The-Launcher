@@ -52,8 +52,10 @@ internal object DeviceSettingsSearch {
 
     fun open(context: Context, setting: DeviceSettingMatch): Boolean = try {
         val intent = Intent(setting.action).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        if (intent.resolveActivity(context.packageManager) == null) false
-        else { context.startActivity(intent); true }
+        // resolveActivity can be filtered by Android package visibility.
+        // Let the platform resolve the explicit settings action and catch failures.
+        context.startActivity(intent)
+        true
     } catch (_: ActivityNotFoundException) {
         false
     } catch (_: SecurityException) {
