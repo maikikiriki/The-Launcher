@@ -222,7 +222,7 @@
     <string name="private_space_unlock_edit">Unlock to edit</string>
     <string name="private_space_lock">Lock Private space</string>
     <!-- Core -->
-    <string name="app_name">Grace Launcher</string>
+    <string name="app_name">Acronix Launcher</string>
     <string name="alphabet_scroller">Alphabet quick scroll</string>
     <string name="back_home">Back to home</string>
     <string name="jump_to_letter">Apps starting with %1$s</string>
@@ -284,7 +284,7 @@
     <string name="package_name_copied">Copied</string>
     <string name="choose_app_store">Choose app store</string>
     <string name="app_store_unavailable">No app store can open this app’s page.</string>
-    <string name="grace_settings">Grace settings</string>
+    <string name="grace_settings">Acronix settings</string>
     <string name="done">Done</string>
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
