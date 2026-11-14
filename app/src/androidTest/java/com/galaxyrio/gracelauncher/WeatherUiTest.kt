@@ -57,6 +57,8 @@ import com.galaxyrio.gracelauncher.ui.LauncherActions
 import com.galaxyrio.gracelauncher.ui.LauncherScreen
 import com.galaxyrio.gracelauncher.ui.LauncherUiState
 import com.galaxyrio.gracelauncher.ui.ScheduleStatus
+import com.galaxyrio.gracelauncher.ui.overlays.LocalLauncherSheetLayout
+import com.galaxyrio.gracelauncher.ui.overlays.launcherSheetLayout
 import com.galaxyrio.gracelauncher.ui.overlays.AgendaSheet
 import com.galaxyrio.gracelauncher.ui.theme.GraceLauncherTheme
 import com.galaxyrio.gracelauncher.ui.weather.WeatherSourceNote
@@ -187,7 +189,9 @@ class WeatherUiTest {
                 GraceLauncherTheme(dynamicColor = false) {
                     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceContainer)) {
                         Surface(Modifier.width(320.dp), color = MaterialTheme.colorScheme.surfaceContainer, contentColor = MaterialTheme.colorScheme.onSurface) {
-                            AgendaSheet(state, LauncherActions(), onRequestCalendar = {})
+                            CompositionLocalProvider(LocalLauncherSheetLayout provides launcherSheetLayout(false)) {
+                                AgendaSheet(state, LauncherActions(), onRequestCalendar = {})
+                            }
                         }
                     }
                 }
