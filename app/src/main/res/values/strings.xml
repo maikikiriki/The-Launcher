@@ -1186,4 +1186,25 @@
     <string name="agenda_choose_create_action">Choose what to add</string>
     <string name="agenda_new_task">New task</string>
     <string name="agenda_unsaved_message">Your agenda changes haven’t been saved.</string>
+
+    <!-- Acronix launcher-specific search features -->
+    <string name="acronix_search_order">Search result order</string>
+    <string name="acronix_search_order_summary">Move each source up or down to choose the order of results.</string>
+    <string name="acronix_search_section_apps">Applications</string>
+    <string name="acronix_search_section_contacts">Contacts</string>
+    <string name="acronix_search_section_device">Device settings</string>
+    <string name="acronix_search_section_internet">Web search</string>
+    <string name="acronix_search_device_enabled">Find device settings</string>
+    <string name="acronix_search_device_summary">Search Wi-Fi, Bluetooth, Developer options and other system settings locally.</string>
+    <string name="acronix_search_move_up">Move up</string>
+    <string name="acronix_search_move_down">Move down</string>
+    <string name="acronix_device_developer">Developer options</string>
+    <string name="acronix_device_wifi">Wi-Fi settings</string>
+    <string name="acronix_device_bluetooth">Bluetooth settings</string>
+    <string name="acronix_device_apps">Application settings</string>
+    <string name="acronix_device_battery">Battery saver settings</string>
+    <string name="acronix_device_display">Display settings</string>
+    <string name="acronix_device_security">Security settings</string>
+    <string name="acronix_device_accessibility">Accessibility settings</string>
+    <string name="acronix_device_notifications">Notification settings</string>
 </resources>
