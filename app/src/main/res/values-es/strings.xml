@@ -84,7 +84,7 @@
     <string name="private_space_security_required">Configura el bloqueo de pantalla del dispositivo para activar la protección con contraseña</string>
     <string name="private_space_unlock_edit">Desbloquea para editar</string>
     <string name="private_space_lock">Bloquear el Espacio Privado</string>
-    <string name="app_name">Grace Launcher</string>
+    <string name="app_name">Acronix Launcher</string>
     <string name="alphabet_scroller">Desplazamiento rápido alfabético</string>
     <string name="back_home">Volver al inicio</string>
     <string name="jump_to_letter">Aplicaciones que empiezan por %1$s</string>
@@ -144,7 +144,7 @@
     <string name="package_name_copied">Copiado</string>
     <string name="choose_app_store">Elegir tienda de aplicaciones</string>
     <string name="app_store_unavailable">Ninguna tienda de aplicaciones puede abrir la página de esta aplicación.</string>
-    <string name="grace_settings">Configurar Grace</string>
+    <string name="grace_settings">Configurar Acronix</string>
     <string name="done">Hecho</string>
     <string name="save">Guardar</string>
     <string name="cancel">Cancelar</string>
