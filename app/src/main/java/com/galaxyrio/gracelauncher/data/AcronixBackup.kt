@@ -1,0 +1,322 @@
+package com.galaxyrio.gracelauncher.data
+
+import android.content.ContentValues
+import android.content.Context
+import android.database.Cursor
+import android.database.sqlite.SQLiteDatabase
+import android.net.Uri
+import android.os.Build
+import android.util.Base64
+import androidx.sqlite.db.SupportSQLiteDatabase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.File
+import java.io.InputStream
+import java.io.OutputStream
+import java.security.MessageDigest
+import java.util.UUID
+import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
+import java.util.zip.ZipOutputStream
+
+/**
+ * User-controlled on-device backup. The archive may contain personal preferences,
+ * contact shortcuts and folder names. It is NEVER sent to a server by this class.
+ *
+ * This format is only for Acronix itself, not direct access to Grace's sandbox.
+ */
+object AcronixBackup {
+    private const val VERSION = 1
+    private const val MAX_BYTES = 128L * 1024L * 1024L
+    private const val MAX_FILE = 24L * 1024L * 1024L
+    private val tables = listOf("launcher_settings", "hidden_apps", "folders", "item_icons",
+        "saved_shortcuts", "app_popups")
+    private val assetDirs = listOf("clock_fonts", "item_icons")
+    private const val DATA_ENTRY = "data.json"
+
+    suspend fun export(context: Context, uri: Uri) = withContext(Dispatchers.IO) {
+        context.contentResolver.openOutputStream(uri, "w")?.use { exportTo(context, it) }
+            ?: error("Unable to open destination")
+    }
+
+    suspend fun shareFile(context: Context): File = withContext(Dispatchers.IO) {
+        val dir = File(context.cacheDir, "acronix_shared").apply { mkdirs() }
+        dir.listFiles().orEmpty().forEach { it.delete() }
+        val output = File(dir, "Acronix-backup.zip")
+        try { output.outputStream().use { exportTo(context, it) }; output }
+        catch (error: Exception) { output.delete(); throw error }
+    }
+
+    private fun exportTo(context: Context, output: OutputStream) {
+        val db = LauncherDatabase.getInstance(context).openHelper.writableDatabase
+        val data = JSONObject()
+            .put("format", "acronix-backup")
+            .put("version", VERSION)
+            .put("dbVersion", 34)
+            .put("tables", exportTables(db))
+            .put("preferences", exportPreferences(context))
+        val bytes = data.toString().toByteArray(Charsets.UTF_8)
+        require(bytes.size.toLong() <= MAX_FILE)
+        val checksum = sha256(bytes)
+        val meta = JSONObject().put("format", "acronix-backup")
+            .put("version", VERSION).put("checksum", checksum)
+            .put("createdAt", System.currentTimeMillis())
+            .put("android", Build.VERSION.SDK_INT)
+        ZipOutputStream(output.buffered()).use { zip ->
+            fun add(name: String, source: InputStream) {
+                zip.putNextEntry(ZipEntry(name))
+                source.use { input -> copyLimited(input, zip, MAX_FILE) }
+                zip.closeEntry()
+            }
+            add("manifest.json", meta.toString().byteInputStream(Charsets.UTF_8))
+            add(DATA_ENTRY, bytes.inputStream())
+            for (directory in assetDirs) {
+                val dir = File(context.filesDir, directory)
+                dir.listFiles().orEmpty().filter { it.isFile && safeFileName(it.name) }.forEach { file ->
+                    if (file.length() <= MAX_FILE) add("files/$directory/${file.name}", file.inputStream())
+                }
+            }
+        }
+    }
+
+    /** Validation occurs completely before any on-device state is replaced. */
+    suspend fun restore(context: Context, uri: Uri) = withContext(Dispatchers.IO) {
+        val staging = File(context.cacheDir, "acronix_restore_${UUID.randomUUID()}")
+        check(staging.mkdirs())
+        val oldFiles = File(staging, "_rollback")
+        oldFiles.mkdirs()
+        val staged = File(staging, "files").apply { mkdirs() }
+        try {
+            var dataBytes: ByteArray? = null
+            var manifest: JSONObject? = null
+            var total = 0L
+            var count = 0
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                ZipInputStream(input.buffered()).use { zip ->
+                    while (true) {
+                        val entry = zip.nextEntry ?: break
+                        count++
+                        require(count <= 4096 && !entry.isDirectory) { "Invalid archive entries" }
+                        val name = entry.name
+                        require(name == "manifest.json" || name == DATA_ENTRY ||
+                            assetDirs.any { name.startsWith("files/$it/") && safeFileName(name.substringAfterLast('/')) &&
+                                name == "files/$it/${name.substringAfterLast('/')}" }) { "Unsafe archive entry" }
+                        val maxEntry = if (name == DATA_ENTRY) MAX_FILE else MAX_FILE
+                        val sink = if (name.startsWith("files/")) {
+                            val target = File(staged, name.removePrefix("files/"))
+                            check(target.parentFile?.mkdirs() == true || target.parentFile?.isDirectory == true)
+                            target.outputStream()
+                        } else java.io.ByteArrayOutputStream()
+                        var size = 0L
+                        sink.use { out ->
+                            val buffer = ByteArray(8192)
+                            while (true) {
+                                val n = zip.read(buffer)
+                                if (n < 0) break
+                                size += n; total += n
+                                require(size <= maxEntry && total <= MAX_BYTES) { "Backup exceeds size limit" }
+                                out.write(buffer, 0, n)
+                            }
+                        }
+                        if (name == DATA_ENTRY || name == "manifest.json") {
+                            val bytes = (sink as java.io.ByteArrayOutputStream).toByteArray()
+                            if (name == DATA_ENTRY) dataBytes = bytes else manifest = JSONObject(String(bytes, Charsets.UTF_8))
+                        }
+                        zip.closeEntry()
+                    }
+                }
+            } ?: error("Unable to read backup")
+            val bytes = requireNotNull(dataBytes) { "Missing backup data" }
+            val meta = requireNotNull(manifest) { "Missing backup manifest" }
+            require(meta.optString("format") == "acronix-backup" && meta.optInt("version") == VERSION)
+            require(meta.optString("checksum") == sha256(bytes)) { "Backup integrity failure" }
+            val data = JSONObject(String(bytes, Charsets.UTF_8))
+            require(data.optString("format") == "acronix-backup" && data.optInt("dbVersion") == 34)
+            val rows = data.getJSONObject("tables")
+            val preferences = data.getJSONObject("preferences")
+            val db = LauncherDatabase.getInstance(context).openHelper.writableDatabase
+            checkTables(db, rows)
+            val originalPrefs = exportPreferences(context)
+
+            // Move file directories to private rollback storage. Never follow entry paths.
+            val moved = mutableListOf<String>()
+            try {
+                for (name in assetDirs) {
+                    val old = File(context.filesDir, name)
+                    val backup = File(oldFiles, name)
+                    if (old.exists()) {
+                        check(old.renameTo(backup)) { "Failed to secure existing $name" }
+                    }
+                    moved += name
+                    val replacement = File(staged, name)
+                    if (replacement.isDirectory) {
+                        check(replacement.renameTo(old)) { "Failed to restore $name" }
+                    }
+                }
+
+                db.beginTransaction()
+                try {
+                    for (table in tables) db.execSQL("DELETE FROM $table")
+                    for (table in tables) {
+                        val array = rows.getJSONArray(table)
+                        for (i in 0 until array.length()) {
+                            val row = array.getJSONObject(i)
+                            val values = ContentValues()
+                            val columns = tableColumns(db, table)
+                            val keys = row.keys()
+                            while (keys.hasNext()) {
+                                val key = keys.next()
+                                require(key in columns) { "Unexpected database column" }
+                                when (val value = row.get(key)) {
+                                    JSONObject.NULL -> values.putNull(key)
+                                    is Int -> values.put(key, value)
+                                    is Long -> values.put(key, value)
+                                    is Double -> values.put(key, value)
+                                    is String -> values.put(key, value)
+                                    else -> error("Invalid database value")
+                                }
+                            }
+                            require(db.insert(table, SQLiteDatabase.CONFLICT_ABORT, values) != -1L)
+                        }
+                    }
+                    restorePreferences(context, preferences)
+                    db.setTransactionSuccessful()
+                } finally {
+                    db.endTransaction()
+                }
+            } catch (error: Exception) {
+                // Restore private assets and preferences even when database transaction fails.
+                for (name in moved.asReversed()) {
+                    File(context.filesDir, name).deleteRecursively()
+                    val backup = File(oldFiles, name)
+                    if (backup.exists()) check(backup.renameTo(File(context.filesDir, name)))
+                }
+                restorePreferences(context, originalPrefs)
+                throw error
+            }
+            // The editor and open screens should be reopened so in-memory caches reload.
+            // Widget bindings are system-owned and may require a new bind approval.
+        } finally {
+            staging.deleteRecursively()
+        }
+    }
+
+    private fun exportTables(db: SupportSQLiteDatabase): JSONObject = JSONObject().apply {
+        for (table in tables) {
+            val array = JSONArray()
+            db.query("SELECT * FROM $table").use { cursor ->
+                while (cursor.moveToNext()) {
+                    val row = JSONObject()
+                    for (index in 0 until cursor.columnCount) {
+                        val key = cursor.getColumnName(index)
+                        when (cursor.getType(index)) {
+                            Cursor.FIELD_TYPE_NULL -> row.put(key, JSONObject.NULL)
+                            Cursor.FIELD_TYPE_INTEGER -> row.put(key, cursor.getLong(index))
+                            Cursor.FIELD_TYPE_FLOAT -> row.put(key, cursor.getDouble(index))
+                            Cursor.FIELD_TYPE_STRING -> row.put(key, cursor.getString(index))
+                            else -> error("Unsupported database field")
+                        }
+                    }
+                    array.put(row)
+                    require(array.length() <= 100_000)
+                }
+            }
+            put(table, array)
+        }
+    }
+
+    private fun checkTables(db: SupportSQLiteDatabase, data: JSONObject) {
+        for (table in tables) {
+            val expected = tableColumns(db, table)
+            val rows = data.getJSONArray(table)
+            require(rows.length() <= 100_000)
+            for (i in 0 until rows.length()) {
+                val row = rows.getJSONObject(i)
+                val keys = row.keys()
+                while (keys.hasNext()) require(keys.next() in expected)
+            }
+        }
+    }
+
+    private fun tableColumns(db: SupportSQLiteDatabase, table: String): Set<String> {
+        require(table in tables)
+        val result = mutableSetOf<String>()
+        db.query("PRAGMA table_info($table)").use { cursor ->
+            val index = cursor.getColumnIndexOrThrow("name")
+            while (cursor.moveToNext()) result += cursor.getString(index)
+        }
+        require(result.isNotEmpty())
+        return result
+    }
+
+    private fun exportPreferences(context: Context): JSONObject = JSONObject().apply {
+        val directory = File(context.applicationInfo.dataDir, "shared_prefs")
+        directory.listFiles().orEmpty().filter { it.isFile && it.name.endsWith(".xml") }.forEach { file ->
+            val name = file.name.removeSuffix(".xml")
+            if (!name.matches(Regex("[A-Za-z0-9_.-]{1,100}"))) return@forEach
+            val values = JSONObject()
+            for ((key, value) in context.getSharedPreferences(name, Context.MODE_PRIVATE).all) {
+                val item = JSONObject()
+                when (value) {
+                    is String -> item.put("type", "string").put("value", value)
+                    is Boolean -> item.put("type", "boolean").put("value", value)
+                    is Int -> item.put("type", "int").put("value", value)
+                    is Long -> item.put("type", "long").put("value", value)
+                    is Float -> item.put("type", "float").put("value", value.toDouble())
+                    is Set<*> -> item.put("type", "set").put("value", JSONArray(value.filterIsInstance<String>()))
+                    else -> continue
+                }
+                values.put(key, item)
+            }
+            put(name, values)
+        }
+    }
+
+    private fun restorePreferences(context: Context, all: JSONObject) {
+        val names = all.keys()
+        while (names.hasNext()) {
+            val name = names.next()
+            require(name.matches(Regex("[A-Za-z0-9_.-]{1,100}")))
+            val data = all.getJSONObject(name)
+            val editor = context.getSharedPreferences(name, Context.MODE_PRIVATE).edit().clear()
+            val keys = data.keys()
+            while (keys.hasNext()) {
+                val key = keys.next()
+                val item = data.getJSONObject(key)
+                when (item.getString("type")) {
+                    "string" -> editor.putString(key, item.getString("value"))
+                    "boolean" -> editor.putBoolean(key, item.getBoolean("value"))
+                    "int" -> editor.putInt(key, item.getInt("value"))
+                    "long" -> editor.putLong(key, item.getLong("value"))
+                    "float" -> editor.putFloat(key, item.getDouble("value").toFloat())
+                    "set" -> {
+                        val value = item.getJSONArray("value")
+                        editor.putStringSet(key, (0 until value.length()).map { value.getString(it) }.toSet())
+                    }
+                    else -> error("Unexpected preference type")
+                }
+            }
+            check(editor.commit())
+        }
+    }
+
+    private fun safeFileName(name: String) = name.length in 1..160 &&
+        name.matches(Regex("[\\p{L}\\p{N}_. -]+")) && name != "." && name != ".."
+
+    private fun copyLimited(input: InputStream, output: OutputStream, limit: Long) {
+        val buffer = ByteArray(8192)
+        var total = 0L
+        while (true) {
+            val count = input.read(buffer)
+            if (count < 0) return
+            total += count
+            require(total <= limit) { "File too large" }
+            output.write(buffer, 0, count)
+        }
+    }
+
+    private fun sha256(bytes: ByteArray) = MessageDigest.getInstance("SHA-256").digest(bytes)
+        .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+}
