@@ -115,7 +115,7 @@ internal object AcronixBackup {
             .toString().toByteArray(Charsets.UTF_8)
     }
 
-    suspend fun import(context: Context, input: InputStream) = withContext(Dispatchers.IO) {
+    suspend fun restore(context: Context, input: InputStream) = withContext(Dispatchers.IO) {
         val staging = File(context.cacheDir, "acronix-import-" + System.nanoTime())
         check(staging.mkdirs()) { "No se pudo preparar la importación" }
         try {
