@@ -50,6 +50,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.GraceLauncher"
         tools:targetApi="33">
+        <!-- Shares only the user-requested backup; app data stays private. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/acronix_file_paths" />
+        </provider>
         <!-- The official Breezy notifier requires an exported receiver and defines no
              sender permission. Payloads are ignored; signals only coalesce a read of
              the permission-protected, package-verified provider while enabled. -->
