@@ -94,7 +94,7 @@ internal fun AcronixBackupSettingsScreen(onBack: () -> Unit) {
             item {
                 SettingsActionItem(stringResource(R.string.acronix_backup_share),
                     stringResource(R.string.acronix_backup_share_summary), 2, 3, "acronix_share",
-                    enabled = !busy, onClick = ::share)
+                    enabled = !busy, onClick = { share() })
             }
             item {
                 Text(stringResource(R.string.acronix_backup_limitations))
@@ -114,7 +114,7 @@ internal fun AcronixBackupSettingsScreen(onBack: () -> Unit) {
                     val result = runCatching {
                         withContext(Dispatchers.IO) {
                             val stream = context.contentResolver.openInputStream(uri) ?: error("No se pudo abrir la copia")
-                            stream.use { AcronixBackup.import(context, it) }
+                            stream.use { AcronixBackup.restore(context, it) }
                         }
                     }
                     busy = false
