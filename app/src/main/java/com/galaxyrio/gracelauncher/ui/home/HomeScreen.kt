@@ -51,6 +51,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -167,6 +169,10 @@ fun HomeScreen(
     val categoryIcons = uiState.appCategories.associate { it.key to it.icon }
     val entriesByKey = entries.associateBy { it.key }
     val favoriteFolders = (uiState.folders + uiState.favoriteFolders).associateBy { it.id }
+    var notificationOwnerKey by rememberSaveable { mutableStateOf<String?>(null) }
+    val homeRowGestures = rowGestures.copy(onNotificationsSwipe = { target ->
+        notificationOwnerKey = target.key
+    })
     var idleMediaDismissed by rememberSaveable(uiState.settings.mediaAlwaysVisible, uiState.settings.mediaPlayer) { mutableStateOf(false) }
     LaunchedEffect(uiState.homeMedia?.sessionId, uiState.homeMedia?.revision) {
         if (uiState.homeMedia != null) idleMediaDismissed = false
@@ -414,18 +420,19 @@ fun HomeScreen(
                                 modifier = Modifier.padding(horizontal = LauncherLayout.ContentInset - AppStackInset.dp, vertical = 4.dp))
                             else if (folder != null) FolderRow(folder, app = app,
                                 highlighted = highlightedAppKey == folder.key,
-                                notifications = uiState.notificationPreviewsFor(app),
+                                notifications = uiState.notificationsFor(app, expanded = true),
                                 onOpen = { onOpenFolder(folder, it) }, onLongClick = { onEditFolder(folder) },
                                 onDrag = { bounds, expanded -> onFolderDrag(folder, bounds, expanded) },
                                 onDragEnd = onFolderDragEnd,
                                 onSwipeLeft = rowGestures.onOpenFirst?.let { open -> { bounds -> open(app, bounds) } },
+                                onNotificationsSwipe = { notificationOwnerKey = app.key },
                                 showLabel = uiState.settings.listAppearance.showNames(favorites = true),
                                 categoryIcon = categoryIcon)
                             else LauncherAppRow(app, onClick = { onLaunchApp(app) }, onLongClick = { onAppDetails(app) },
                                 usageText = favoriteUsageLabel(app, uiState),
-                                onSwipeRight = { onAppShortcuts(app, it) }, gestures = rowGestures,
+                                onSwipeRight = { onAppShortcuts(app, it) }, gestures = homeRowGestures,
                                 highlighted = highlightedAppKey == app.key,
-                                notifications = uiState.notificationPreviewsFor(app),
+                                notifications = uiState.notificationsFor(app, expanded = true),
                                 showLabel = uiState.settings.listAppearance.showNames(favorites = true),
                                 categoryIcon = categoryIcon)
                         }
@@ -449,6 +456,35 @@ fun HomeScreen(
             }, onFinished = { onTopOffsetChange(topOffset) },
             modifier = Modifier.padding(start = uiState.settings.listAppearance.startPadding, end = uiState.settings.listAppearance.endPadding)
                 .offset(y = (if (baselineIndex >= 0) baselineTop else resolvedTop) - 20.dp))
+    }
+    notificationOwnerKey?.let { key ->
+        val owner = uiState.findItem(key)
+        val results = owner?.let { uiState.notificationsFor(it, expanded = true) }.orEmpty()
+        AlertDialog(
+            onDismissRequest = { notificationOwnerKey = null },
+            title = { Text(owner?.label ?: stringResource(R.string.acronix_notifications_title)) },
+            text = {
+                if (results.isEmpty()) {
+                    Text(stringResource(R.string.acronix_notifications_empty))
+                } else {
+                    LazyColumn(Modifier.heightIn(max = 400.dp)) {
+                        items(results, key = { it.key }) { notice ->
+                            Column(Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+                                Text(notice.title.ifBlank { notice.packageName },
+                                    style = MaterialTheme.typography.titleSmall)
+                                if (notice.text.isNotBlank()) Text(notice.text,
+                                    style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { notificationOwnerKey = null }) {
+                    Text(stringResource(R.string.acronix_done))
+                }
+            },
+        )
     }
 }
 
