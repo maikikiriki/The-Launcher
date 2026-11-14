@@ -27,6 +27,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.material3.MaterialTheme
@@ -236,6 +237,7 @@ fun LauncherAppRow(
         onDragEnd = gestures.onDragEnd,
         popupsEnabled = gestures.popupsEnabled,
         onSwipeLeft = gestures.onOpenFirst?.let { open -> { bounds -> open(app, bounds) } },
+        onNotificationsSwipe = gestures.onNotificationsSwipe?.let { notify -> { notify(app) } },
         openDescription = stringResource(R.string.app_shortcuts),
         detailsDescription = stringResource(R.string.app_actions),
         modifier = modifier,
@@ -259,6 +261,7 @@ fun FolderRow(
     onDrag: (Rect, Boolean) -> Unit = { _, _ -> },
     onDragEnd: (Boolean) -> Unit = {},
     onSwipeLeft: ((Rect) -> Unit)? = null,
+    onNotificationsSwipe: (() -> Unit)? = null,
     highlighted: Boolean = false,
     showLabel: Boolean = true,
     app: LauncherApp = folder.asApp(),
@@ -283,6 +286,7 @@ fun FolderRow(
         onDrag = onDrag,
         onDragEnd = onDragEnd,
         onSwipeLeft = onSwipeLeft,
+        onNotificationsSwipe = onNotificationsSwipe,
         openDescription = stringResource(R.string.open_folder),
         detailsDescription = stringResource(R.string.folder_actions),
         modifier = modifier,
@@ -318,6 +322,7 @@ private fun LauncherRow(
     highlighted: Boolean,
     popupsEnabled: Boolean = true,
     onSwipeLeft: ((Rect) -> Unit)? = null,
+    onNotificationsSwipe: (() -> Unit)? = null,
     notifications: List<AppNotification> = emptyList(),
     showLabel: Boolean = true,
     trailing: (@Composable () -> Unit)? = null,
@@ -338,6 +343,7 @@ private fun LauncherRow(
     val currentDrag by rememberUpdatedState(onDrag)
     val currentDragEnd by rememberUpdatedState(onDragEnd)
     val currentSwipeLeft by rememberUpdatedState(onSwipeLeft)
+    val currentNotificationsSwipe by rememberUpdatedState(onNotificationsSwipe)
     var bounds by remember { mutableStateOf(Rect.Zero) }
     var iconCoordinates by remember { mutableStateOf<LayoutCoordinates?>(null) }
     // Query at activation time: a graphics-layer translation need not trigger layout.
@@ -452,7 +458,21 @@ private fun LauncherRow(
                 else Modifier)) {
                 AppNotificationLabel(label, notifications, labelVisible,
                     usageText = usageText,
-                    labelModifier = Modifier.testTag("$rowKey:label"),
+                    showNotificationDots = onNotificationsSwipe != null,
+                    labelModifier = Modifier.testTag("$rowKey:label").then(
+                        if (onNotificationsSwipe != null && labelVisible) Modifier.pointerInput(rowKey, inputEnabled) {
+                            if (!inputEnabled) return@pointerInput
+                            var distance = 0f
+                            val minSwipe = 44.dp.toPx()
+                            detectHorizontalDragGestures(
+                                onDragStart = { distance = 0f },
+                                onDragEnd = { if (distance <= -minSwipe) currentNotificationsSwipe?.invoke() },
+                                onHorizontalDrag = { change, delta ->
+                                    distance += delta
+                                    change.consume()
+                                },
+                            )
+                        } else Modifier),
                     notificationBodyLines = if (popupSettings.singleLineNotificationPreviews) 1 else 2,
                     categoryIcon = if (showLabel) categoryIcon else CategoryIcon.None)
             }
@@ -486,6 +506,7 @@ internal fun AppNotificationLabel(
     notificationBodyLines: Int = 1,
     usageText: String? = null,
     categoryIcon: CategoryIcon = CategoryIcon.None,
+    showNotificationDots: Boolean = false,
 ) {
     val style = listLabelStyle(onWallpaper)
     val list = LocalListAppearance.current
@@ -518,7 +539,20 @@ internal fun AppNotificationLabel(
                     Modifier.size(16.dp).testTag("category_indicator:${categoryIcon.name}"), tint = style.color)
             }
         }
-        notifications.forEachIndexed { index, notification ->
+        if (showNotificationDots && notifications.isNotEmpty()) {
+            // Stable per-package color; one dot for every distinct active notification.
+            Row(horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(3.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                notifications.take(12).forEach { notice ->
+                    val hue = ((notice.packageName.hashCode().toLong() and 0x7fffffff) % 360).toFloat()
+                    val color = Color(android.graphics.Color.HSVToColor(floatArrayOf(hue, 0.75f, 0.95f)))
+                    Box(Modifier.size(6.dp).clip(CircleShape).background(color))
+                }
+                if (notifications.size > 12) Text("+${notifications.size - 12}",
+                    style = style.copy(fontSize = 10.sp))
+            }
+        }
+        if (!showNotificationDots) notifications.forEachIndexed { index, notification ->
             key(notification.key) {
                 if (index > 0) Spacer(Modifier.height(6.dp))
                 else if (showLabel) Spacer(Modifier.height(2.dp))
@@ -543,4 +577,5 @@ data class AppRowGestures(
     val onLaunchAt: ((LauncherApp, Rect) -> Unit)? = null,
     val popupsEnabled: Boolean = true,
     val onOpenFirst: ((LauncherApp, Rect) -> Unit)? = null,
+    val onNotificationsSwipe: ((LauncherApp) -> Unit)? = null,
 )
