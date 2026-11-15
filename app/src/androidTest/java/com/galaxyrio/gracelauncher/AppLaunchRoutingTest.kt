@@ -25,6 +25,10 @@ class AppLaunchRoutingTest {
         val launches = mutableListOf<Pair<Intent, Bundle?>>()
         var profileServiceRequests = 0
 
+        // AppRepository deliberately retains only applicationContext. Preserve this
+        // recording boundary so tests never dispatch real Android launches.
+        override fun getApplicationContext(): Context = this
+
         override fun startActivity(intent: Intent, options: Bundle?) {
             launches += intent to options
             failure?.let { throw it }
