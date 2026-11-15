@@ -80,4 +80,4 @@ jobs:
           api-level: 35
           arch: x86_64
           disable-animations: true
-          script: bash gradlew :app:connectedDebugAndroidTest --stacktrace --no-daemon
+          script: bash scripts/check_android.sh

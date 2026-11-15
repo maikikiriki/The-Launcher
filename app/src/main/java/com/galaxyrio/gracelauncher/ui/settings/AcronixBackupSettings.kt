@@ -59,6 +59,19 @@ internal fun AcronixBackupSettings(onBack: () -> Unit) {
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null && !busy) pendingRestore = uri
     }
+    val checkedText = stringResource(R.string.acronix_backup_checked)
+    val inspector = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null && !busy) scope.launch {
+            busy = true
+            try {
+                AcronixBackup.inspect(context, uri)
+                status = checkedText
+            } catch (error: Exception) {
+                if (error is CancellationException) throw error
+                status = errorText
+            } finally { busy = false }
+        }
+    }
     SettingsScaffold(stringResource(R.string.acronix_backup_title), "acronix_backup", onBack) { padding: PaddingValues ->
         Column(Modifier.padding(padding).verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 24.dp),
@@ -100,6 +113,10 @@ internal fun AcronixBackupSettings(onBack: () -> Unit) {
                 }
             }, modifier = Modifier.fillMaxWidth(), enabled = !busy) {
                 Text(stringResource(R.string.acronix_backup_share))
+            }
+            Button(onClick = { inspector.launch(arrayOf("application/zip", "application/octet-stream")) },
+                modifier = Modifier.fillMaxWidth(), enabled = !busy) {
+                Text(stringResource(R.string.acronix_backup_check))
             }
             if (busy) Text(stringResource(R.string.acronix_backup_busy))
             status?.let { Text(it, color = MaterialTheme.colorScheme.primary) }

@@ -47,3 +47,7 @@ Se elimina el objetivo de reproducir el vídeo de Grace; se conserva la cobertur
 Fold: selector manual prioritario, detección de pliegue a interior solo mediante opción explícita, fallback compartido sin adivinar exterior; textos ES/EN y deshacer último cambio mediante preferencia anterior. Exportación incluye únicamente claves actuales revisadas de Fold, no historial undo. Pruebas de selección/persistencia/allowlist añadidas. Pendientes CI y prueba UI real.
 
 Run 43691277396 final: unit/build/manifiesto OK; 451 pruebas instrumentadas, 95 fallos. Run 43692020984 sigue en curso al preparar este lote. Las nuevas correcciones no se consideran verificadas. Journal y recuperación global continúan sin integrar; restauración bloqueada. No hay APK estable instalable.
+
+## Flujos integrados de prueba y comprobación
+
+Run 43692020984 completo: unit/build/manifest OK; 451 pruebas instrumentadas y 103 fallos, ocho nuevos respecto al run anterior por categorías fuera de pantalla. Se restaura orden de categorías principales antes de herramientas, conservando todas las entradas y assertions. Añadido flujo Compose Fold real (ajustes→persistencia→presentación, copia/undo/modo compartido, conservación de widgets/favoritos). Añadido Comprobar copia en Ajustes usando SAF y verificador central/payload sin restaurar; exportación se inspecciona en test Android. Nuevos tests aún pendientes de CI. Workflow ejecuta familias de integración primero y suite completa incluso si falla la focalizada. Restauración global/tres puntos siguen pendientes; no hay candidata estable.

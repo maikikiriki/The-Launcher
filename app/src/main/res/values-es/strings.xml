@@ -1243,4 +1243,6 @@
     <string name="fold_copy_warning">Se sustituye la posición de destino. Los widgets y favoritos siguen compartidos.</string>
     <string name="fold_copy">Copiar</string>
     <string name="fold_undo">Deshacer último cambio de posición</string>
+    <string name="acronix_backup_check">Comprobar copia</string>
+    <string name="acronix_backup_checked">Estructura y hashes de los archivos comprobados. Esto no autentica su autor ni garantiza una restauración segura.</string>
 </resources>

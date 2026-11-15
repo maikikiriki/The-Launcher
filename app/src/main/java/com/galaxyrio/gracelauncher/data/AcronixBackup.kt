@@ -28,6 +28,40 @@ import java.util.zip.ZipOutputStream
  * This format is only for Acronix itself, not direct access to Grace's sandbox.
  */
 object AcronixBackup {
+    data class Inspection(val payloadCount: Int)
+
+    /** Checks v2 archive structure and payload integrity, never applies configuration. */
+    suspend fun inspect(context: Context, uri: Uri): Inspection = withContext(Dispatchers.IO) {
+        val file = File.createTempFile("acronix_inspect_", ".zip", context.cacheDir)
+        try {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                file.outputStream().use { copyLimited(input, it, MAX_BYTES + 4L * 1024 * 1024) }
+            } ?: error("Unable to read backup")
+            val expected = linkedMapOf<String, BackupArchiveIntegrity.Entry>()
+            java.util.zip.ZipFile(file).use { zip ->
+                val entry = requireNotNull(zip.getEntry("manifest.json")) { "Missing manifest" }
+                val buffer = java.io.ByteArrayOutputStream()
+                zip.getInputStream(entry).use { copyLimited(it, buffer, 1024L * 1024) }
+                val bytes = buffer.toByteArray()
+                val manifest = JSONObject(String(bytes, Charsets.UTF_8))
+                require(manifest.getString("format") == "acronix-backup" && manifest.getInt("version") == 2 &&
+                    manifest.getInt("dbVersion") == 34) { "Unsupported backup version" }
+                val entries = manifest.getJSONObject("entries")
+                require(entries.length() in 1..4095 && entries.has(DATA_ENTRY))
+                for (name in entries.keys()) {
+                    require(name == DATA_ENTRY || assetDirs.any { directory ->
+                        name.startsWith("files/$directory/") && safeFileName(name.substringAfterLast('/')) &&
+                            name == "files/$directory/${name.substringAfterLast('/')}"
+                    }) { "Unexpected backup resource" }
+                    val item = entries.getJSONObject(name)
+                    expected[name] = BackupArchiveIntegrity.Entry(item.getLong("size"), item.getString("sha256"))
+                }
+                expected["manifest.json"] = BackupArchiveIntegrity.Entry(bytes.size.toLong(), sha256(bytes))
+            }
+            BackupArchiveIntegrity.verifyFile(file, expected, MAX_FILE, MAX_BYTES, 4096)
+            Inspection(expected.size - 1)
+        } finally { file.delete() }
+    }
     private const val VERSION = 1
     private const val MAX_BYTES = 128L * 1024L * 1024L
     private const val MAX_FILE = 24L * 1024L * 1024L

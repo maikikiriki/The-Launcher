@@ -17,6 +17,7 @@ class BackupExportIntegrityTest {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val file = AcronixBackup.shareFile(context)
         try {
+            assertTrue(AcronixBackup.inspect(context, android.net.Uri.fromFile(file)).payloadCount >= 1)
             ZipFile(file).use { zip ->
                 val manifest = JSONObject(zip.getInputStream(zip.getEntry("manifest.json")).bufferedReader().use { it.readText() })
                 assertEquals(2, manifest.getInt("version"))

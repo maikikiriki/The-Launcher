@@ -1281,4 +1281,6 @@
     <string name="fold_copy_warning">This replaces the target placement. Widgets and favorites remain shared.</string>
     <string name="fold_copy">Copy</string>
     <string name="fold_undo">Undo last placement change</string>
+    <string name="acronix_backup_check">Check backup</string>
+    <string name="acronix_backup_checked">Archive structure and payload hashes checked. This does not authenticate its author or guarantee safe restoration.</string>
 </resources>
