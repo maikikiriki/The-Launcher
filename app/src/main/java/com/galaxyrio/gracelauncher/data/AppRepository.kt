@@ -548,30 +548,8 @@ class AppRepository(context: Context, private val iconPacks: IconPackRepository 
             isAdaptiveIcon = drawable is AdaptiveIconDrawable, originalIconColor = originalColor)
     }
 
-    fun launch(
-        app: LauncherApp,
-        sourceBounds: Rect? = null,
-        options: Bundle? = null,
-    ): Boolean = runCatching {
-        val user = app.user ?: Process.myUserHandle()
-        if (user == Process.myUserHandle()) {
-            // Match Launcher3/Lawnchair: current-user entry activities may perform
-            // OEM authentication or forwarding before opening the actual app.
-            val intent = Intent(Intent.ACTION_MAIN)
-                .addCategory(Intent.CATEGORY_LAUNCHER)
-                .setComponent(app.componentName)
-                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED)
-                .also { it.sourceBounds = sourceBounds }
-            context.startActivity(intent, options)
-        } else {
-            // Never fall back to the personal installation of a cross-profile app.
-            context.getSystemService(LauncherApps::class.java).startMainActivity(
-                app.componentName, user, sourceBounds, options,
-            )
-        }
-    }.onFailure { error ->
-        Log.e("AppRepository", "Unable to launch ${app.componentName} for ${app.user ?: Process.myUserHandle()}", error)
-    }.isSuccess
+    fun launch(app: LauncherApp, sourceBounds: Rect? = null, options: Bundle? = null): Boolean =
+        AppLaunchRouter.launch(context, app, sourceBounds, options)
 
     companion object {
         private const val PROFILE_CHECK_INTERVAL = 30_000L

@@ -67,8 +67,8 @@ class ClockStyleEditorModesTest {
     }
 
     private fun findLayout(layout: ClockLayout): SemanticsNodeInteraction {
-        findControl("clock_layout_selector")
-        compose.onNodeWithTag("clock_layout_options", useUnmergedTree = true).performScrollToNode(hasTestTag("clock_layout:${layout.name}"))
+        // Presets are now direct cards in the page list, not a nested selector.
+        compose.onNodeWithTag("clock_style_controls").performScrollToNode(hasTestTag("clock_layout:${layout.name}"))
         return compose.onNodeWithTag("clock_layout:${layout.name}")
     }
 
