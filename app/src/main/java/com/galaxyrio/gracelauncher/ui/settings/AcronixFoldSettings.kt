@@ -10,6 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -29,9 +30,9 @@ private fun Context.activity(): Activity? = when (this) {
 }
 
 @Composable
-private fun foldPreferences(): Pair<SharedPreferences, Int> {
+private fun foldPreferences(override: SharedPreferences? = null): Pair<SharedPreferences, Int> {
     val context = LocalContext.current
-    val prefs = remember(context) { context.getSharedPreferences("acronix_fold_layouts", Context.MODE_PRIVATE) }
+    val prefs = remember(context, override) { override ?: context.getSharedPreferences("acronix_fold_layouts", Context.MODE_PRIVATE) }
     var revision by remember { mutableIntStateOf(0) }
     DisposableEffect(prefs) {
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> revision++ }
@@ -43,9 +44,9 @@ private fun foldPreferences(): Pair<SharedPreferences, Int> {
 
 /** Presentation overlay only. Android widget identity and membership always come from Room. */
 @Composable
-internal fun foldPresentation(shared: HomeLayout): HomeLayout {
+internal fun foldPresentation(shared: HomeLayout, preferences: SharedPreferences? = null): HomeLayout {
     val context = LocalContext.current
-    val (prefs, revision) = foldPreferences()
+    val (prefs, revision) = foldPreferences(preferences)
     val layouts by produceState(FoldLayouts(shared = shared), shared, revision) {
         value = withContext(Dispatchers.IO) { runCatching { FoldLayoutStore(prefs).load(shared) }
             .getOrDefault(FoldLayouts(shared = shared)) }
@@ -68,8 +69,8 @@ internal fun foldPresentation(shared: HomeLayout): HomeLayout {
 }
 
 @Composable
-internal fun AcronixFoldSettings(shared: HomeLayout, onBack: () -> Unit) {
-    val (prefs, revision) = foldPreferences()
+internal fun AcronixFoldSettings(shared: HomeLayout, onBack: () -> Unit, preferences: SharedPreferences? = null) {
+    val (prefs, revision) = foldPreferences(preferences)
     val scope = rememberCoroutineScope()
     var layouts by remember { mutableStateOf(FoldLayouts(shared = shared)) }
     var failed by remember { mutableStateOf(false) }
@@ -97,7 +98,7 @@ internal fun AcronixFoldSettings(shared: HomeLayout, onBack: () -> Unit) {
             Text(stringResource(R.string.acronix_fold_summary))
             Text(stringResource(R.string.fold_detection))
             if (failed) Text(stringResource(R.string.fold_error), color = MaterialTheme.colorScheme.error)
-            Button(enabled = !busy && !failed, onClick = { save(layouts.copy(independent = !layouts.independent)) }) {
+            Button(modifier = Modifier.testTag("fold_mode"), enabled = !busy && !failed, onClick = { save(layouts.copy(independent = !layouts.independent)) }) {
                 Text(stringResource(if (layouts.independent) R.string.fold_shared else R.string.fold_independent))
             }
             Button(enabled = !busy && !failed, onClick = {
@@ -105,7 +106,7 @@ internal fun AcronixFoldSettings(shared: HomeLayout, onBack: () -> Unit) {
                     if (!prefs.edit().remove("surface").putBoolean("fold_signal_inner", true).commit()) failed = true
                 } }
             }) { Text(stringResource(R.string.fold_auto)) }
-            Button(enabled = !busy && !failed && prefs.contains("previous_layouts"), onClick = {
+            Button(modifier = Modifier.testTag("fold_undo"), enabled = !busy && !failed && prefs.contains("previous_layouts"), onClick = {
                 scope.launch {
                     busy = true
                     try { withContext(Dispatchers.IO) { FoldLayoutStore(prefs).undo() } }
@@ -114,7 +115,7 @@ internal fun AcronixFoldSettings(shared: HomeLayout, onBack: () -> Unit) {
                 }
             }) { Text(stringResource(R.string.fold_undo)) }
             FoldSurface.entries.forEach { choice ->
-                Button(enabled = !busy && !failed, onClick = {
+                Button(modifier = Modifier.testTag("fold_surface:${choice.name}"), enabled = !busy && !failed, onClick = {
                     surface = choice
                     scope.launch { withContext(Dispatchers.IO) {
                         if (!prefs.edit().putString("surface", choice.name).commit()) failed = true
@@ -123,17 +124,17 @@ internal fun AcronixFoldSettings(shared: HomeLayout, onBack: () -> Unit) {
             }
             val selected = layouts.layout(surface)
             Text(stringResource(R.string.fold_preview, stringResource(if (surface == FoldSurface.Outer) R.string.fold_outer else R.string.fold_inner), selected.topOffsetDp.toInt(), selected.clockCalendarEnabled.toString()))
-            Button(enabled = layouts.independent && !busy && !failed, onClick = {
+            Button(modifier = Modifier.testTag("fold_clock"), enabled = layouts.independent && !busy && !failed, onClick = {
                 save(layouts.edit(surface, selected.copy(clockCalendarEnabled = !selected.clockCalendarEnabled)))
             }) { Text(stringResource(R.string.fold_toggle_clock)) }
             Row {
                 listOf(-16f, 16f).forEach { delta ->
-                    Button(enabled = layouts.independent && !busy && !failed, onClick = {
+                    Button(modifier = Modifier.testTag("fold_offset:${delta.toInt()}"), enabled = layouts.independent && !busy && !failed, onClick = {
                         save(layouts.edit(surface, selected.copy(topOffsetDp = (selected.topOffsetDp + delta).coerceIn(-1200f, 1200f))))
                     }) { Text("${delta.toInt()} dp") }
                 }
             }
-            Button(enabled = layouts.independent && !busy && !failed,
+            Button(modifier = Modifier.testTag("fold_copy"), enabled = layouts.independent && !busy && !failed,
                 onClick = { copyTarget = if (surface == FoldSurface.Outer) FoldSurface.Inner else FoldSurface.Outer }) {
                 Text(stringResource(R.string.fold_copy_other))
             }
@@ -142,7 +143,7 @@ internal fun AcronixFoldSettings(shared: HomeLayout, onBack: () -> Unit) {
     copyTarget?.let { target ->
         AlertDialog(onDismissRequest = { copyTarget = null }, title = { Text(stringResource(R.string.fold_confirm)) },
             text = { Text(stringResource(R.string.fold_copy_warning)) },
-            confirmButton = { TextButton(onClick = { save(layouts.copyTo(surface, target)); copyTarget = null }) { Text(stringResource(R.string.fold_copy)) } },
+            confirmButton = { TextButton(modifier = Modifier.testTag("fold_copy_confirm"), onClick = { save(layouts.copyTo(surface, target)); copyTarget = null }) { Text(stringResource(R.string.fold_copy)) } },
             dismissButton = { TextButton(onClick = { copyTarget = null }) { Text(stringResource(R.string.settings_cancel)) } })
     }
 }
