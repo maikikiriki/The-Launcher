@@ -17,7 +17,7 @@ class ClockStyleWallpaperTest {
     @Test fun standaloneEditorDisplaysTheSystemWallpaperInsideItsPreviewOnly() {
         compose.waitUntil(10_000) { compose.onAllNodesWithTag("settings_category_themes").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithTag("settings_category_themes").performClick()
-        compose.onNodeWithTag("settings_clock_style").performScrollTo().performClick()
+        compose.onNodeWithTag("settings_clock_style").also { compose.onNodeWithTag("settings_list").performScrollToNode(hasTestTag("settings_clock_style")) }.performClick()
         compose.onNodeWithTag("clock_style_preview").assertIsDisplayed()
         SystemClock.sleep(350) // Wait for platform window animations, outside Compose's clock.
         compose.runOnIdle {

@@ -51,20 +51,8 @@ class ClockStyleEditorModesTest {
 
     private fun tab(name: String) = compose.onNodeWithTag("clock_tab:$name").performClick()
 
-    private fun findControl(tag: String): SemanticsNodeInteraction {
-        val region = tag.removePrefix("clock_region:").substringBefore(':')
-        if (tag.startsWith("clock_region:") && region in setOf("Primary", "Secondary", "Tertiary")) {
-            val list = compose.onNodeWithTag("clock_style_controls")
-            val heading = "clock_region_heading:$region"
-            list.performScrollToNode(hasTestTag(heading))
-            if (compose.onNodeWithTag(heading).fetchSemanticsNode().config[androidx.compose.ui.semantics.SemanticsProperties.StateDescription] ==
-                InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.widget_group_collapsed)) {
-                compose.onNodeWithTag(heading).performClick()
-            }
-        }
-        compose.onNodeWithTag("clock_style_controls").performScrollToNode(hasTestTag(tag))
-        return compose.onNodeWithTag(tag)
-    }
+    private fun findControl(tag: String): SemanticsNodeInteraction =
+        clockEditorControl(tag, { compose.onNodeWithTag(it, useUnmergedTree = true) }, { compose.waitForIdle() })
 
     private fun findLayout(layout: ClockLayout): SemanticsNodeInteraction {
         // Presets are now direct cards in the page list, not a nested selector.

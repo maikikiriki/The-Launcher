@@ -40,11 +40,10 @@ class ClockStyleSettingsTest {
         compose.onNodeWithTag("settings_category_themes").performClick()
         openEditor()
     }
-    private fun openEditor() = compose.onNodeWithTag("settings_clock_style").performScrollTo().performClick()
-    private fun control(tag: String): SemanticsNodeInteraction {
-        compose.onNodeWithTag("clock_style_controls").performScrollToNode(hasTestTag(tag))
-        return compose.onNodeWithTag(tag, useUnmergedTree = true)
-    }
+    private fun openEditor() = compose.onNodeWithTag("settings_clock_style").also { compose.onNodeWithTag("settings_list").performScrollToNode(hasTestTag("settings_clock_style")) }.performClick()
+    private fun control(tag: String): SemanticsNodeInteraction =
+        clockEditorControl(tag, { compose.onNodeWithTag(it, useUnmergedTree = true) }, { compose.waitForIdle() })
+
     private fun chooseLines(stacked: Boolean) = control("clock_primary_lines:$stacked").performClick()
     private fun choosePrimary(element: ClockElement) = control("clock_region:Primary:${element.name}").performClick()
     private fun set(tag: String, value: Float) {
