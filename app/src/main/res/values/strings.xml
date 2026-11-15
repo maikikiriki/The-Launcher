@@ -1266,4 +1266,19 @@
     <string name="acronix_diag_unknown">Could not read this information.</string>
     <string name="acronix_fold_title">Foldable screens</string>
     <string name="acronix_fold_summary">Independent clock and baseline placement; widgets and favorites stay shared.</string>
+    <string name="fold_detection">Choose the active screen manually for reliable selection. Automatic mapping is optional: a reported fold can use the inner placement; otherwise the shared layout is used.</string>
+    <string name="fold_auto">Use fold signal as inner (optional)</string>
+    <string name="fold_error">Unable to read or save layouts. Existing data is retained.</string>
+    <string name="fold_shared">Use shared layout</string>
+    <string name="fold_independent">Enable independent placement</string>
+    <string name="fold_select">Edit / select %1$s</string>
+    <string name="fold_outer">Outer</string>
+    <string name="fold_inner">Inner</string>
+    <string name="fold_preview">%1$s: offset %2$d dp; clock %3$s</string>
+    <string name="fold_toggle_clock">Toggle clock and calendar</string>
+    <string name="fold_copy_other">Copy placement to other screen</string>
+    <string name="fold_confirm">Copy placement?</string>
+    <string name="fold_copy_warning">This replaces the target placement. Widgets and favorites remain shared.</string>
+    <string name="fold_copy">Copy</string>
+    <string name="fold_undo">Undo last placement change</string>
 </resources>

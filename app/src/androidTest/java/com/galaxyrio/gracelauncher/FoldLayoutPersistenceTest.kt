@@ -20,6 +20,9 @@ class FoldLayoutPersistenceTest {
                 outer = HomeLayout(widgetId = 42), inner = HomeLayout(widgetId = 43))
             store.save(value)
             assertEquals(value, FoldLayoutStore(prefs).load(legacy))
+            store.save(value.edit(FoldSurface.Outer, HomeLayout(topOffsetDp = 64f)))
+            assertTrue(FoldLayoutStore(prefs).undo())
+            assertEquals(value, FoldLayoutStore(prefs).load(legacy))
         } finally { context.deleteSharedPreferences(name) }
     }
 }

@@ -39,3 +39,11 @@ El inicio ahora aplica posición/visibilidad por superficie mediante FoldLayoutS
 La exportación verifica también el directorio central ZIP y prueba su truncamiento. Run 43691031909: unit/build/manifest OK; el log final de instrumentación indica 451 tests y 95 fallos. El progreso mostraba 5 skipped, no se deduce un recuento final passed/skipped sin JUnit. Run del journal 43691277396 ya inició; nuevas integraciones pendientes de CI. Journal sigue sin coordinador de datos reales ni recuperación de arranque: no puede habilitarse restauración.
 
 Referencia API: https://developer.android.com/jetpack/androidx/releases/window (WindowInfoTracker/FoldingFeature). La ausencia de FoldingFeature NO se considera prueba de pantalla exterior: se utiliza la selección manual.
+
+## Prioridad funcional y correcciones siguientes
+
+Se elimina el objetivo de reproducir el vídeo de Grace; se conserva la cobertura funcional y de seguridad. El enrutamiento de lanzamiento se extrae a AppLaunchRouter, usado por producción y pruebas, para evitar que los observadores del catálogo interfieran con el contexto grabador. El test de presets busca tarjetas en su lista real en vez de un selector ya inexistente; conserva selección y comprobaciones de guardado.
+
+Fold: selector manual prioritario, detección de pliegue a interior solo mediante opción explícita, fallback compartido sin adivinar exterior; textos ES/EN y deshacer último cambio mediante preferencia anterior. Exportación incluye únicamente claves actuales revisadas de Fold, no historial undo. Pruebas de selección/persistencia/allowlist añadidas. Pendientes CI y prueba UI real.
+
+Run 43691277396 final: unit/build/manifiesto OK; 451 pruebas instrumentadas, 95 fallos. Run 43692020984 sigue en curso al preparar este lote. Las nuevas correcciones no se consideran verificadas. Journal y recuperación global continúan sin integrar; restauración bloqueada. No hay APK estable instalable.

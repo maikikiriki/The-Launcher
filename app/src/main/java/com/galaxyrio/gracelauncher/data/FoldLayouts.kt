@@ -6,6 +6,10 @@ import org.json.JSONObject
 
 enum class FoldSurface { Outer, Inner }
 
+internal fun foldSurfaceSelection(manual: String?, mapFoldToInner: Boolean, foldReported: Boolean): FoldSurface? =
+    manual?.let { runCatching { FoldSurface.valueOf(it) }.getOrNull() }
+        ?: if (mapFoldToInner && foldReported) FoldSurface.Inner else null
+
 /** Layout metadata only: copying never allocates/deletes an Android widget host ID. */
 data class FoldLayouts(
     val independent: Boolean = false,
@@ -48,11 +52,22 @@ class FoldLayoutStore internal constructor(private val preferences: SharedPrefer
             json.optString("inner").takeIf { it.isNotEmpty() }?.let { HomeLayout.decode(it) })
     }
 
+    fun undo(): Boolean {
+        val previous = preferences.getString("previous_layouts", null) ?: return false
+        val current = preferences.getString("layouts", null)
+        val editor = preferences.edit().putString("layouts", previous)
+        if (current == null) editor.remove("previous_layouts") else editor.putString("previous_layouts", current)
+        check(editor.commit()) { "Unable to restore previous placement" }
+        return true
+    }
+
     fun save(value: FoldLayouts) {
         val json = JSONObject().put("version", 1).put("independent", value.independent)
             .put("shared", value.shared.encode())
         value.outer?.let { json.put("outer", it.encode()) }
         value.inner?.let { json.put("inner", it.encode()) }
-        check(preferences.edit().putString("layouts", json.toString()).commit()) { "Unable to persist layouts" }
+        val editor = preferences.edit()
+        preferences.getString("layouts", null)?.let { editor.putString("previous_layouts", it) }
+        check(editor.putString("layouts", json.toString()).commit()) { "Unable to persist layouts" }
     }
 }

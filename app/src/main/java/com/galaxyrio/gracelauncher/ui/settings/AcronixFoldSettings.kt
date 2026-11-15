@@ -62,8 +62,9 @@ internal fun foldPresentation(shared: HomeLayout): HomeLayout {
             hingeVisible = false
         }
     }
-    val manual = runCatching { FoldSurface.valueOf(prefs.getString("surface", "Outer")!!) }.getOrDefault(FoldSurface.Outer)
-    return layouts.presentation(shared, if (hingeVisible) FoldSurface.Inner else manual)
+    val surface = foldSurfaceSelection(prefs.getString("surface", null),
+        prefs.getBoolean("fold_signal_inner", false), hingeVisible)
+    return surface?.let { layouts.presentation(shared, it) } ?: shared
 }
 
 @Composable
@@ -77,7 +78,8 @@ internal fun AcronixFoldSettings(shared: HomeLayout, onBack: () -> Unit) {
     var copyTarget by remember { mutableStateOf<FoldSurface?>(null) }
     LaunchedEffect(revision, shared) {
         busy = true
-        try { layouts = withContext(Dispatchers.IO) { FoldLayoutStore(prefs).load(shared) }; failed = false }
+        try { layouts = withContext(Dispatchers.IO) { FoldLayoutStore(prefs).load(shared) };
+            prefs.getString("surface", null)?.let { name -> runCatching { FoldSurface.valueOf(name) }.getOrNull()?.let { surface = it } }; failed = false }
         catch (error: Exception) { if (error is CancellationException) throw error; failed = true }
         finally { busy = false }
     }
@@ -93,24 +95,37 @@ internal fun AcronixFoldSettings(shared: HomeLayout, onBack: () -> Unit) {
         Column(Modifier.padding(padding).verticalScroll(rememberScrollState()).padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(stringResource(R.string.acronix_fold_summary))
-            Text("Android selects the inner layout when it reports a fold in this window. Otherwise choose the screen manually below.")
-            if (failed) Text("Unable to read or save layouts. Existing data has been retained.", color = MaterialTheme.colorScheme.error)
+            Text(stringResource(R.string.fold_detection))
+            if (failed) Text(stringResource(R.string.fold_error), color = MaterialTheme.colorScheme.error)
             Button(enabled = !busy && !failed, onClick = { save(layouts.copy(independent = !layouts.independent)) }) {
-                Text(if (layouts.independent) "Use shared layout" else "Enable independent placement")
+                Text(stringResource(if (layouts.independent) R.string.fold_shared else R.string.fold_independent))
             }
+            Button(enabled = !busy && !failed, onClick = {
+                scope.launch { withContext(Dispatchers.IO) {
+                    if (!prefs.edit().remove("surface").putBoolean("fold_signal_inner", true).commit()) failed = true
+                } }
+            }) { Text(stringResource(R.string.fold_auto)) }
+            Button(enabled = !busy && !failed && prefs.contains("previous_layouts"), onClick = {
+                scope.launch {
+                    busy = true
+                    try { withContext(Dispatchers.IO) { FoldLayoutStore(prefs).undo() } }
+                    catch (error: Exception) { if (error is CancellationException) throw error; failed = true }
+                    finally { busy = false }
+                }
+            }) { Text(stringResource(R.string.fold_undo)) }
             FoldSurface.entries.forEach { choice ->
                 Button(enabled = !busy && !failed, onClick = {
                     surface = choice
                     scope.launch { withContext(Dispatchers.IO) {
                         if (!prefs.edit().putString("surface", choice.name).commit()) failed = true
                     } }
-                }) { Text("Edit / select ${choice.name}") }
+                }) { Text(stringResource(R.string.fold_select, stringResource(if (choice == FoldSurface.Outer) R.string.fold_outer else R.string.fold_inner))) }
             }
             val selected = layouts.layout(surface)
-            Text("${surface.name}: offset ${selected.topOffsetDp.toInt()} dp; clock ${selected.clockCalendarEnabled}")
+            Text(stringResource(R.string.fold_preview, stringResource(if (surface == FoldSurface.Outer) R.string.fold_outer else R.string.fold_inner), selected.topOffsetDp.toInt(), selected.clockCalendarEnabled.toString()))
             Button(enabled = layouts.independent && !busy && !failed, onClick = {
                 save(layouts.edit(surface, selected.copy(clockCalendarEnabled = !selected.clockCalendarEnabled)))
-            }) { Text("Toggle clock and calendar") }
+            }) { Text(stringResource(R.string.fold_toggle_clock)) }
             Row {
                 listOf(-16f, 16f).forEach { delta ->
                     Button(enabled = layouts.independent && !busy && !failed, onClick = {
@@ -120,14 +135,14 @@ internal fun AcronixFoldSettings(shared: HomeLayout, onBack: () -> Unit) {
             }
             Button(enabled = layouts.independent && !busy && !failed,
                 onClick = { copyTarget = if (surface == FoldSurface.Outer) FoldSurface.Inner else FoldSurface.Outer }) {
-                Text("Copy placement to other screen")
+                Text(stringResource(R.string.fold_copy_other))
             }
         }
     }
     copyTarget?.let { target ->
-        AlertDialog(onDismissRequest = { copyTarget = null }, title = { Text("Copy placement?") },
-            text = { Text("Replace $target placement with $surface. Widgets and favorites remain shared.") },
-            confirmButton = { TextButton(onClick = { save(layouts.copyTo(surface, target)); copyTarget = null }) { Text("Copy") } },
-            dismissButton = { TextButton(onClick = { copyTarget = null }) { Text("Cancel") } })
+        AlertDialog(onDismissRequest = { copyTarget = null }, title = { Text(stringResource(R.string.fold_confirm)) },
+            text = { Text(stringResource(R.string.fold_copy_warning)) },
+            confirmButton = { TextButton(onClick = { save(layouts.copyTo(surface, target)); copyTarget = null }) { Text(stringResource(R.string.fold_copy)) } },
+            dismissButton = { TextButton(onClick = { copyTarget = null }) { Text(stringResource(R.string.settings_cancel)) } })
     }
 }

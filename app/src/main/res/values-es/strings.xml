@@ -1228,4 +1228,19 @@
     <string name="acronix_diag_unknown">No se puede consultar esta información.</string>
     <string name="acronix_fold_title">Pantallas plegables</string>
     <string name="acronix_fold_summary">Posición independiente del reloj y línea base; widgets y favoritos compartidos.</string>
+    <string name="fold_detection">Selecciona manualmente la pantalla para una selección fiable. El modo automático es opcional: un pliegue detectado puede usar la posición interior; en otro caso se usa el diseño compartido.</string>
+    <string name="fold_auto">Usar señal de pliegue como interior (opcional)</string>
+    <string name="fold_error">No se pueden leer o guardar los diseños. Se conservan los datos existentes.</string>
+    <string name="fold_shared">Usar diseño compartido</string>
+    <string name="fold_independent">Activar posición independiente</string>
+    <string name="fold_select">Editar / seleccionar %1$s</string>
+    <string name="fold_outer">Exterior</string>
+    <string name="fold_inner">Interior</string>
+    <string name="fold_preview">%1$s: desplazamiento %2$d dp; reloj %3$s</string>
+    <string name="fold_toggle_clock">Mostrar u ocultar reloj y calendario</string>
+    <string name="fold_copy_other">Copiar posición a la otra pantalla</string>
+    <string name="fold_confirm">¿Copiar posición?</string>
+    <string name="fold_copy_warning">Se sustituye la posición de destino. Los widgets y favoritos siguen compartidos.</string>
+    <string name="fold_copy">Copiar</string>
+    <string name="fold_undo">Deshacer último cambio de posición</string>
 </resources>

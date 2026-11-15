@@ -5,6 +5,13 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class FoldLayoutsTest {
+    @Test fun manualSelectionWinsAndAbsentFoldDoesNotGuessOuter() {
+        assertEquals(FoldSurface.Outer, foldSurfaceSelection("Outer", true, true))
+        assertNull(foldSurfaceSelection(null, false, true))
+        assertNull(foldSurfaceSelection(null, true, false))
+        assertEquals(FoldSurface.Inner, foldSurfaceSelection(null, true, true))
+    }
+
     @Test fun renderedPlacementNeverReplacesWidgetIdentityOrFavorites() {
         val base = HomeLayout(widgetId = 41, homeOrder = listOf("app:a", "widget:41"))
         val state = FoldLayouts(independent = true, outer = HomeLayout(widgetId = 99, topOffsetDp = 32f))
