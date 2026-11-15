@@ -27,3 +27,7 @@ Gradle admite firma release opcional mediante cuatro variables de entorno (sin c
 ## Ciclo operativo siguiente
 
 Run 43689388816: unit-and-build OK; 450 pruebas instrumentadas finalizadas, 97 fallos. El log de progreso muestra 5 omitidas antes de terminar; falta resumen JUnit final para calcular aprobadas/omitidas sin ambigüedad. Migración de iconos ya no aparece como fallo. Se corrige fixture de icon packs del test de rutas y apertura de grupos plegados del editor. Correcciones pendientes de CI. Modelo/store Fold inicial con pruebas: aún sin integración en pantalla, sin cobertura backup y sin validación física. Restauración y journal siguen pendientes/bloqueados.
+
+## Recuperación: primer componente persistente
+
+RecoveryJournal escribe estado APPLYING antes de devolver control al escritor, usando fichero temporal, fsync y movimiento atómico; COMMITTED evita revertir una operación finalizada. Una reversión fallida deja el journal para reintento. Cinco pruebas JVM cubren reapertura, reversión fallida, operación completada, rechazo de operación concurrente y corrupción. Pendiente de ejecución CI y validación Android/fsync. No está integrado con arranque, snapshots ni Room: NO habilita restauración ni acredita recuperación completa. Root debe ser privado y persistente; faltan integración noBackupFilesDir, coordinación de escrituras, snapshots y tres puntos de retención.
