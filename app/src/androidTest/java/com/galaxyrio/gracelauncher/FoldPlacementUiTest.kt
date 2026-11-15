@@ -18,6 +18,35 @@ import org.junit.Rule
 import org.junit.Test
 
 class FoldPlacementUiTest {
+    @Test fun corruptCurrentPlacementCanRecoverFromTheSettingsButton() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val name = "fold-ui-recovery-${UUID.randomUUID()}"
+        val prefs = context.getSharedPreferences(name, Context.MODE_PRIVATE)
+        val shared = HomeLayout(widgetId = 41)
+        var rendered = shared
+        try {
+            val store = FoldLayoutStore(prefs)
+            val valid = com.galaxyrio.gracelauncher.data.FoldLayouts(independent = true, shared = shared,
+                outer = HomeLayout(topOffsetDp = 16f))
+            store.save(valid)
+            store.save(valid.copy(inner = HomeLayout(topOffsetDp = 32f)))
+            check(prefs.edit().putString("layouts", "corrupt").putString("surface", "Outer").commit())
+            compose.setContent {
+                val home = foldPresentation(shared, prefs)
+                SideEffect { rendered = home }
+                GraceLauncherTheme(dynamicColor = false) {
+                    AcronixFoldSettings(shared, onBack = {}, preferences = prefs)
+                }
+            }
+            click("fold_undo")
+            compose.waitUntil(10_000) { rendered.topOffsetDp == 16f }
+            compose.runOnIdle {
+                assertEquals(valid, store.load(shared))
+                assertEquals(41, rendered.widgetId)
+            }
+        } finally { context.deleteSharedPreferences(name) }
+    }
+
     @get:Rule val compose = createComposeRule()
 
     private fun click(tag: String) {

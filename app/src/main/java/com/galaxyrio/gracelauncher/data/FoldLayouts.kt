@@ -45,15 +45,36 @@ class FoldLayoutStore internal constructor(private val preferences: SharedPrefer
 
     fun load(existing: HomeLayout): FoldLayouts {
         val encoded = preferences.getString("layouts", null) ?: return FoldLayouts(shared = existing)
+        return decode(encoded)
+    }
+
+    private fun decode(encoded: String): FoldLayouts {
+        require(encoded.length <= 1024 * 1024) { "Layout data exceeds limit" }
+        BackupJsonLimits.checkNesting(encoded)
         val json = JSONObject(encoded)
         require(json.getInt("version") == 1) { "Unsupported fold layout version" }
-        return FoldLayouts(json.getBoolean("independent"), HomeLayout.decode(json.getString("shared")),
-            json.optString("outer").takeIf { it.isNotEmpty() }?.let { HomeLayout.decode(it) },
-            json.optString("inner").takeIf { it.isNotEmpty() }?.let { HomeLayout.decode(it) })
+        fun home(key: String): HomeLayout? {
+            if (!json.has(key)) return null
+            val value = json.getString(key)
+            BackupJsonLimits.checkNesting(value)
+            val objectValue = JSONObject(value)
+            if (objectValue.has("widgetId")) {
+                val id = objectValue.get("widgetId")
+                require(id is Number && id.toDouble() == id.toInt().toDouble() && id.toInt() >= -1)
+            }
+            if (objectValue.has("homeOrder")) {
+                val order = objectValue.getJSONArray("homeOrder")
+                require(order.length() <= 10_000)
+                for (i in 0 until order.length()) require(order.get(i) is String)
+            }
+            return HomeLayout.decode(value)
+        }
+        return FoldLayouts(json.getBoolean("independent"), requireNotNull(home("shared")), home("outer"), home("inner"))
     }
 
     fun undo(): Boolean {
         val previous = preferences.getString("previous_layouts", null) ?: return false
+        decode(previous) // Never promote a corrupt undo record over the current layout.
         val current = preferences.getString("layouts", null)
         val editor = preferences.edit().putString("layouts", previous)
         if (current == null) editor.remove("previous_layouts") else editor.putString("previous_layouts", current)
@@ -66,8 +87,11 @@ class FoldLayoutStore internal constructor(private val preferences: SharedPrefer
             .put("shared", value.shared.encode())
         value.outer?.let { json.put("outer", it.encode()) }
         value.inner?.let { json.put("inner", it.encode()) }
+        val encoded = json.toString()
+        decode(encoded)
         val editor = preferences.edit()
-        preferences.getString("layouts", null)?.let { editor.putString("previous_layouts", it) }
-        check(editor.putString("layouts", json.toString()).commit()) { "Unable to persist layouts" }
+        preferences.getString("layouts", null)?.takeIf { runCatching { decode(it) }.isSuccess }
+            ?.let { editor.putString("previous_layouts", it) }
+        check(editor.putString("layouts", encoded).commit()) { "Unable to persist layouts" }
     }
 }

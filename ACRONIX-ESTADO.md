@@ -61,3 +61,9 @@ Run 43693135157 sigue activo al preparar el lote y 43693645479 pendiente. No se 
 ## Reparación coordinada del inventario de 90 casos
 
 Leídos los 90 casos completos. CASOS-90-ESTADO.md conserva seguimiento por caso, sin marcar resueltos antes de CI. Lote: navegación compartida del editor (pestaña/grupos plegados/lista), montaje lazy de ajustes/iconos/favoritos, normalización explícita de regiones para persistencia y aislamiento de applicationContext de caché. Producción conserva expansión del editor tras recreación. CI de familias y full en emuladores distintos, secuenciales, sin contaminación ni supresión de tests. Nueve tests locales de scripts pasan; Android nuevo sin verificar todavía. Recovery global/tres puntos y Fold completo siguen pendientes.
+
+## Últimos resultados y recuperación de posiciones Fold
+
+Run 43694434316 completo: JUnit 447 total / 351 passed / 90 failed / 6 skipped. El contador de dispositivo dice 453; se conserva la discrepancia y no se mezclan ambos denominadores. Run 43695800726: JVM 307/307, 0 fallos/omitidas; 9 scripts Python, build y manifiesto OK. Familias aún activas y full en cola: no hay resultados certificados de las correcciones del lote.
+
+Corregido el flujo de recuperación Fold: undo disponible aunque el diseño actual no se pueda leer; valida el destino antes de sustituirlo; save no copia datos corruptos sobre el último undo válido. Añadidas dos pruebas de corrupción/persistencia y prueba Compose del botón de recuperación. Pendientes de CI. Esto recupera SOLO preferencias de posición Fold como una unidad; no completa restore global, journal de arranque ni tres checkpoints. Sin APK candidata segura.

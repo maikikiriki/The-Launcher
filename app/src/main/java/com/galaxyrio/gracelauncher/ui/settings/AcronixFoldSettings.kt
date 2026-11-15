@@ -106,7 +106,7 @@ internal fun AcronixFoldSettings(shared: HomeLayout, onBack: () -> Unit, prefere
                     if (!prefs.edit().remove("surface").putBoolean("fold_signal_inner", true).commit()) failed = true
                 } }
             }) { Text(stringResource(R.string.fold_auto)) }
-            Button(modifier = Modifier.testTag("fold_undo"), enabled = !busy && !failed && prefs.contains("previous_layouts"), onClick = {
+            Button(modifier = Modifier.testTag("fold_undo"), enabled = !busy && prefs.contains("previous_layouts"), onClick = {
                 scope.launch {
                     busy = true
                     try { withContext(Dispatchers.IO) { FoldLayoutStore(prefs).undo() } }
