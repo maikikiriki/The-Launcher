@@ -8,6 +8,18 @@ import org.junit.Assert.assertThrows
 import org.junit.Test
 
 class BackupArchiveIntegrityTest {
+    @Test fun fileVerificationRejectsMissingCentralDirectory() {
+        val bytes = archive("data" to "ok")
+        val file = java.io.File.createTempFile("backup-test", ".zip")
+        try {
+            file.writeBytes(bytes)
+            BackupArchiveIntegrity.verifyFile(file, mapOf("data" to expected("ok")), 100, 100, 8)
+            file.writeBytes(bytes.copyOf(bytes.size - 22))
+            assertThrows(java.util.zip.ZipException::class.java) {
+                BackupArchiveIntegrity.verifyFile(file, mapOf("data" to expected("ok")), 100, 100, 8)
+            }
+        } finally { file.delete() }
+    }
     private fun archive(vararg files: Pair<String, String>): ByteArray = ByteArrayOutputStream().also { out ->
         ZipOutputStream(out).use { zip -> files.forEach { (name, content) ->
             zip.putNextEntry(ZipEntry(name)); zip.write(content.toByteArray()); zip.closeEntry()

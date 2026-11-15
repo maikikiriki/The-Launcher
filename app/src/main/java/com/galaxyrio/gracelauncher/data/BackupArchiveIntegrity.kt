@@ -1,6 +1,8 @@
 package com.galaxyrio.gracelauncher.data
 
 import java.io.InputStream
+import java.io.File
+import java.util.zip.ZipFile
 import java.security.MessageDigest
 import java.util.zip.ZipInputStream
 
@@ -10,6 +12,23 @@ import java.util.zip.ZipInputStream
  */
 internal object BackupArchiveIntegrity {
     data class Entry(val size: Long, val sha256: String)
+
+    /** ZipInputStream alone does not require an intact central directory. */
+    fun verifyFile(file: File, expected: Map<String, Entry>, maxFile: Long, maxTotal: Long, maxEntries: Int) {
+        require(expected.size <= maxEntries)
+        ZipFile(file).use { zip ->
+            val names = mutableSetOf<String>()
+            val entries = zip.entries()
+            var count = 0
+            while (entries.hasMoreElements()) {
+                val entry = entries.nextElement()
+                require(++count <= maxEntries && !entry.isDirectory && names.add(entry.name))
+                require(entry.name in expected && entry.size == expected.getValue(entry.name).size)
+            }
+            require(names == expected.keys) { "Incomplete central directory" }
+        }
+        file.inputStream().use { verify(it, expected, maxFile, maxTotal, maxEntries) }
+    }
 
     fun verify(input: InputStream, expected: Map<String, Entry>, maxFile: Long, maxTotal: Long, maxEntries: Int) {
         require(maxFile >= 0 && maxTotal >= 0 && maxEntries > 0)

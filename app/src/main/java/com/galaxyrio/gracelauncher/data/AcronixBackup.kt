@@ -101,7 +101,7 @@ object AcronixBackup {
                     .put("dbVersion", 34).put("entries", entries)
                 add("manifest.json", manifest.toString().byteInputStream(Charsets.UTF_8))
             }
-            archive.inputStream().use { BackupArchiveIntegrity.verify(it, expected, MAX_FILE, MAX_BYTES, 4096) }
+            BackupArchiveIntegrity.verifyFile(archive, expected, MAX_FILE, MAX_BYTES, 4096)
             archive.inputStream().use { it.copyTo(output) }
         } finally {
             archive.delete()
