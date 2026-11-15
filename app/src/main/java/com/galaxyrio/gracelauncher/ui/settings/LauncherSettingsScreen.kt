@@ -419,16 +419,17 @@ private fun SettingsHome(
     val showDefaultHomeBanner = isDefaultHome == false
     val languageTag by rememberAppLanguage()
     val categories = buildList {
-        add(SettingsPage.AcronixMigration to LauncherSymbol.Settings)
-        add(SettingsPage.AcronixFold to LauncherSymbol.Settings)
-        add(SettingsPage.AcronixBackup to LauncherSymbol.Settings)
-        add(SettingsPage.AcronixDiagnostics to LauncherSymbol.Settings)
         add(SettingsPage.Productivity to LauncherSymbol.Star)
         add(SettingsPage.Themes to LauncherSymbol.Palette)
         add(SettingsPage.Advanced to LauncherSymbol.Settings)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             add(SettingsPage.Language to LauncherSymbol.Language)
         }
+        // Keep the core navigation first; maintenance tools remain reachable by scrolling.
+        add(SettingsPage.AcronixMigration to LauncherSymbol.Settings)
+        add(SettingsPage.AcronixFold to LauncherSymbol.Settings)
+        add(SettingsPage.AcronixBackup to LauncherSymbol.Settings)
+        add(SettingsPage.AcronixDiagnostics to LauncherSymbol.Settings)
         add(SettingsPage.About to LauncherSymbol.Info)
     }
     SettingsScaffold(stringResource(R.string.settings_title), "settings_root", onBack) { padding ->
