@@ -19,3 +19,7 @@ Run 43646827390: unit-and-build satisfactorio; 98 fallos en 450 pruebas instrume
 ## Siguiente comprobación
 
 Ejecutar CI con las correcciones de migraciones y del contexto de lanzamiento. Mantener visible el resto de fallos de Compose; después completar snapshot coherente/recuperación y avanzar las funciones independientes. Nunca instalar físicamente ni cambiar launcher por defecto sin consentimiento. Sin APK publicada.
+
+## Preparación de firma y diagnóstico
+
+Gradle admite firma release opcional mediante cuatro variables de entorno (sin clave provisionada ni APK firmada verificada). El comprobador de candidatas rechaza paquete/certificado/versión incompatibles; 4 pruebas locales con herramientas simuladas pasan. Falta comprobar herramientas y APK reales. Diagnóstico preparado para consultas fuera del hilo UI; pendiente de CI y Fold.

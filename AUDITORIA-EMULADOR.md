@@ -1,0 +1,107 @@
+# Matriz de fallos del emulador API 35
+
+Fuente: run 43646827390, job 132606382223. Resultado: 98 fallos entre 450 pruebas; no se consideran defectos independientes. Se listan las entradas de fallo del log, sin mensajes, dumps ni capturas que puedan contener datos.
+
+Correcciones posteriores pendientes de CI: lista compartida de migraciones para IconDesignerPersistenceTest y LauncherSettingsPersistenceTest; contexto grabador de AppLaunchRoutingTest. El resto sigue abierto; las excepciones por sí solas no establecen causa raíz. No se han borrado ni ignorado pruebas.
+
+| Clase | Caso | Tipo visible | Estado |
+| --- | --- | --- | --- |
+| AlphabetIndicatorTest | indicatorKeepsAVisibleGapFromActualRailInkDuringHorizontalPulls | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| AlphabetIndicatorTest | indicatorStaysCenteredAndSeparatedAcrossLetterBoundariesAndTheRailEnd | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| AlphabetIndicatorTest | indicatorCentersTheActualInkOfNarrowWideAndNonAlphabeticGlyphs | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| AlphabetIndicatorTest | favoriteCellShowsARealStarBubbleAndKeepsItWhileScrubbingBackFromLetters | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| AlphabetIndicatorTest | letterAndFavoriteIndicatorsFollowLiveAccentAndDarkModeChanges | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| AlphabetSettingsTest | resetColorAndFreeMovementDoNotAlterAppListAppearance | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| AlphabetSettingsTest | fourthPersonalizationEntryOpensTheRightSidePreview | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| AppLaunchRoutingTest | foreignUserUsesProfileServiceAndNeverFallsBackToPersonalApp | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| AppLaunchRoutingTest | currentUserUsesExactLauncherEntryAndPreservesAnimationInputs | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| AppLaunchRoutingTest | personalLaunchFailuresAreReportedWithoutAnotherLaunchAttempt | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| AppNameVisibilitySettingsTest | inlineButtonsSupportAllNameCombinationsAndTheIndependentFolderSwitch | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| AppNotificationUiTest | homePreviewArrowOpensNotificationAboveShortcutsAndLeftSwipeClearsOnlyIt | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockCalendarRenderingTest | weekTimeAndWeekdayHaveIndependentVisibilityAndClickTargets | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockGlyphColorTest | recoloringChangesOnlyGlyphFillAndPreservesSeparatedInkCoverage | Assertion/UI | Pendiente de reproducción/corrección |
+| ClockRegionRenderingTest | featureGatesHideOnlyTheirOwnElementsAndCollapseEmptyRegions | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockRegionRenderingTest | largeTextPreservesBothPhysicalEdgesInRtl | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockRegionRenderingTest | rowTypographyDoesNotInheritPrimaryClockSpacingOrShadow | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockRegionRenderingTest | primaryRotationSwapsItsBoundsAndPreservesVerticalRegionsAndTouchTargets | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockRegionRenderingTest | regionOrderAndAlignmentPreserveIndependentClickTargets | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockRegionRenderingTest | rotatingTallRegionsFitsAvailableWidthWithoutDroppingRows | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockRegionRenderingTest | rotatingAllRegionsSwapsTheBlockAndKeepsAgendaBelowAndUnrotated | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockSettingsTest | searchIncludesOriginalNamesAndDefaultStaysAvailable | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleEditorModesTest | selectingAcrossGroupsMovesAnElementAndDoesNotSaveUntilApply | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleEditorModesTest | editingASavedFontColorAndReturningKeepsTheClockDraftAndRelativeOffsets | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleEditorModesTest | pointerDragsMoveIconsAndDividerWithoutTogglingSelection | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleEditorModesTest | systemBackAlsoGuardsChangesAndDiscardDoesNotSave | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleEditorModesTest | applyingAPresetCopiesItsTypographyAndRestoresVisiblePartsInRegions | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleEditorModesTest | revertingTheOnlyEditDoesNotPromptForUnsavedChanges | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleEditorModesTest | startsWithThreeElementGroupsAndKeepsNamedPresetsOnTheirOwnTab | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleEditorModesTest | partColorsRemainSharedWhileSwitchingBetweenPresetAndStyleTabs | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleEditorModesTest | miscReordersRegionsWithoutChangingTheirContent | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleEditorModesTest | rotationSwitchesRetainPrimaryWhileAllIsOnAndCanBothBeOff | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleEditorModesTest | clearingPrimaryHidesItsControlsAndLeavesTheOtherRegionsSelected | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleEditorModesTest | appBarBackOffersCancelDiscardOrSaveWithoutLosingTheDraft | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleEditorModesTest | failedSaveFromExitDialogKeepsDraftAndCanBeRetried | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleEditorModesTest | clockAndWeatherOptionsFollowTheRegionThatOwnsTheElement | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleEditorModesTest | previewWeatherUsesItsRegionSelectionIndependentlyOfTheWeatherFeature | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStylePersistenceTest | invalidRegionEntriesAreNormalizedWithoutDiscardingValidSettings | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStylePersistenceTest | emptyPrimaryRegionOrderAndIndependentTypographyRoundTrip | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleSettingsTest | importedFontsCanBeSelectedAndReplacedWithTheDefault | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleSettingsTest | previewsAreLiveAndPrimaryElementsKeepIndependentValuesUntilApply | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleSettingsTest | failedApplyKeepsTheEditorAndCanBeRetried | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleSettingsTest | resetButtonsResetOnlyTheirOwnSliderAndBackDiscardsTheDraft | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ClockStyleWallpaperTest | standaloneEditorDisplaysTheSystemWallpaperInsideItsPreviewOnly | androidx.compose.ui.test.ComposeTimeoutException | Pendiente de reproducción/corrección |
+| DrawerAnchoringTest | overflowingGroupKeepsItsAnchorAndRemainsPartOfTheCompleteScrollableList | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| DrawerAnchoringTest | shortTailClampsNaturallyAndReleaseDoesNotJumpToAnArtificialAnchor | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| DrawerAnchoringTest | catalogueThatAlreadyFitsNeverMovesItsSelectedGroupOnHoldOrRelease | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| FavoritesEditorTest | selectedAppsComeFirstAndAllAppsKeepTheirChecksAndAlphabeticOrder | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| FavoritesEditorTest | handlesDragBothDirectionsWithoutTogglingAndOrderIsUsedOnHome | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| FavoritesEditorTest | swappingRowsKeepsTheDraggedRowUnderTheFingerAndNeighborsMoveContinuously | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| FavoritesEditorTest | ordinaryListScrollingNeverChangesFavoritesAndAnEmptySelectionCanBeRefilled | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| FavoritesEditorTest | selectionsAppendToTheSelectedSectionAndUncheckingDoesNotRemoveTheAppFromAllApps | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| HomeAgendaHeaderTest | disablingCalendarRemovesTheSecondRowAndItsSpaceWithoutHidingWeather | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| HomeAgendaHeaderTest | dateAndAgendaMatchAppLabelSizeAndClockUsesMediumWeight | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| HomeMediaPlayerTest | permissionNeedsAnExplicitActionAndToggleNeverGrantsItSilently | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| HomeMediaPlayerTest | rowFitsBetweenDateAndFavoritesWithAlignedCoverAndRealActions | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| HomeMediaPlayerTest | noPermissionDisabledPreferenceAndSettingsLoadingLeaveHomeClean | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| HomepageCategoriesTest | homepageHasGroupsInsteadOfDirectAppsAndOnlyCheckboxesRemoveItems | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| IconDesignerPersistenceTest | migrationPreservesTheOldPackAndDesktopOverridesWhileAddingPersistentPriority | java.lang.IllegalStateException | Pendiente de reproducción/corrección |
+| IconDesignerTest | shortcutPolicyIsAnAllOnlyDraftAboveEffects | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| IconDesignerTest | singleShowsInheritedDisplayAndRestoresSavedOverride | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| IconDesignerTest | sourcePickerAndColorResetKeepTheDraftUntilSave | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| IconDesignerTest | shapeSlidersOnlyAppearForTheirShapeAndSaveIndependentValues | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| IconDesignerTest | displayModeIsFirstAndOnlyItsOwnControlsRemain | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| IconDesignerTest | singleControlsStayDraftsUntilSaveAndColorPickerStaysBelowPreview | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| IconDesignerTest | allIsTheDefaultAndSingleReusesAppSelection | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| IconPackUiTest | themeOpensFullScreenAndMultiplePacksCanBeReorderedAndRemoved | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| LauncherInteractionTest | homeVerticalGesturesNeverOpenDrawerAndFloatingButtonLongPressOpensSettings | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| LauncherInteractionTest | settingsActionRippleChangesInteriorPixelsButStaysInsideRoundedCorners | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| LauncherInteractionTest | floatingButtonRippleStaysInsideItsCircularSurface | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| LauncherInteractionTest | longPressOpensDetailsAndFavoritesAreEditedOnlyInThePanel | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| LauncherInteractionTest | fullListsCanScrollToTheirLastAppWithoutOpeningShortcuts | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| LauncherInteractionTest | rightSwipeOpensProvidedShortcutRowsAndDoesNotLaunchTheApp | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| LauncherInteractionTest | tappingDateShowsAgendaWithEventsAndNewEventAction | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| LauncherReloadTest | missingMismatchedOrDamagedPreviewFallsBackAndCanBeReplaced | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| LauncherReloadTest | returningHomeReusesLoadedAppsAndExplicitInvalidationStillReloads | Assertion/UI | Pendiente de reproducción/corrección |
+| LauncherReloadTest | profileAppsAndShortcutsNeverEnterThePersonalPreview | java.io.FileNotFoundException | Pendiente de reproducción/corrección |
+| LauncherSettingsIntegrationTest | productivityTogglesRemoveAgendaAndBatteryFromTheHomeHeader | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| LauncherSettingsIntegrationTest | foldersRespectPlacementAndHiddenMembersRemainInPopupAndSearch | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| LauncherSurfaceTest | drawerReachesThePhysicalTopAndFadesItsAppPixels | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ListAppearanceColorTest | dimSwitchRevealsSliderAndColorWhilePreservingTheChoiceWhenDisabled | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| MediaSessionRepositoryTest | metadataArtworkAndTransportControlsFollowTheRealController | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| PopupGestureSettingsTest | slowRightSwipeOpensOnTheActualHomePager | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| PopupWidgetEditingTest | releaseShowsHandlesAndResizeChangesBothWidgetAndPanel | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| PopupWidgetEditingTest | fullWidthRestoresInsetAndScaleDoesNotChangeOuterSize | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ProfileFavoritesTest | combinedGroupHasThreeAddActionsThenDisabledOrSelectableProfileCheckboxes | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ProfileFavoritesTest | workFavoriteOpensAPopupOnHomeEvenWhenDrawerModeIsList | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| ProfileFavoritesTest | privateFavoriteAuthenticatesThenOpensOnHomeEvenWhenDrawerModeIsList | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| SearchGestureInteractionTest | emptyResultsStillStretchAndPullDownClosesSearch | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| SearchGestureInteractionTest | shortResultsUseNativeStretchAtBothEdgesWithoutDismissing | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| SettingsNavigationTest | cancellingBackKeepsFolderDraftAndDirectEditorExitsItsOwnFlow | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| SettingsRefinementTest | advancedShowsComingSoonAndCanReturnToSettings | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| TypographyTest | clockDateScheduleRailAndDrawerHeadingsKeepTheLauncherFamily | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| TypographyTest | detailsAdvancedPackageAndRenameFieldInheritFamilyThroughNestedThemes | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| WeatherStyleTest | settingsKeepsProviderAndLicenseCreditsAwayFromAgenda | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| WeatherUiTest | calendarPermissionAndCalendarErrorsKeepTheWeatherAvailable | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| WeatherUiTest | chineseNarrowAgendaKeepsLocalizedDatesAndWeatherReadable | java.lang.AssertionError | Pendiente de reproducción/corrección |
+| WeatherUiTest | homeWeatherSharesDateActionAndAgendaMergesForecastWithEvents | java.lang.AssertionError | Pendiente de reproducción/corrección |
+

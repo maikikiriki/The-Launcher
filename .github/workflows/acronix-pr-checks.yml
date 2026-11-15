@@ -10,7 +10,7 @@ permissions:
 
 concurrency:
   group: acronix-pr-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   unit-and-build:
@@ -34,6 +34,8 @@ jobs:
             ln -s android-37.0 "$ANDROID_HOME/platforms/android-37"
           fi
       - uses: gradle/actions/setup-gradle@v4
+      - name: Verificar comprobador de candidatas
+        run: python3 -m unittest discover -s scripts/tests -v
       - name: Ejecutar pruebas unitarias y compilar variante estandar
         run: bash gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest --stacktrace --no-daemon
       - name: Verificar manifiesto de la variante estandar
