@@ -60,6 +60,11 @@ jobs:
           fi
 
   android-instrumentation:
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        scope: [families, full]
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
@@ -91,12 +96,12 @@ jobs:
           api-level: 35
           arch: x86_64
           disable-animations: true
-          script: bash scripts/check_android.sh
+          script: ACRONIX_TEST_SCOPE=${{ matrix.scope }} bash scripts/check_android.sh
       - name: Conservar recuentos sanitizados de instrumentacion
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: instrumentation-counts
+          name: instrumentation-counts-${{ matrix.scope }}
           path: app/build/acronix-reports/instrumentation-summary.json
           if-no-files-found: warn
           retention-days: 14

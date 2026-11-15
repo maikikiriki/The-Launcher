@@ -57,3 +57,7 @@ Run 43692020984 completo: unit/build/manifest OK; 451 pruebas instrumentadas y 1
 Preparada una única ejecución completa de instrumentación, sin filtrar ni omitir tests, para evitar doble ejecución sobre el mismo estado. Resúmenes JUnit con total/passed/failed/skipped por clase, sin copiar mensajes/trazas/capturas, para unitarias e instrumentadas. Nueve pruebas locales de scripts pasan, incluidas ejecución única y conservación del fallo de Gradle. Protección de profundidad JSON integrada antes del parser del manifiesto; tests JVM y Android del inspector añadidos, aún pendientes de CI.
 
 Run 43693135157 sigue activo al preparar el lote y 43693645479 pendiente. No se reemplaza el pendiente con otro push. Recuperación global/arranque y tres puntos aún no implementados, restore bloqueado. El inspector no garantiza recuperabilidad.
+
+## Reparación coordinada del inventario de 90 casos
+
+Leídos los 90 casos completos. CASOS-90-ESTADO.md conserva seguimiento por caso, sin marcar resueltos antes de CI. Lote: navegación compartida del editor (pestaña/grupos plegados/lista), montaje lazy de ajustes/iconos/favoritos, normalización explícita de regiones para persistencia y aislamiento de applicationContext de caché. Producción conserva expansión del editor tras recreación. CI de familias y full en emuladores distintos, secuenciales, sin contaminación ni supresión de tests. Nueve tests locales de scripts pasan; Android nuevo sin verificar todavía. Recovery global/tres puntos y Fold completo siguen pendientes.
