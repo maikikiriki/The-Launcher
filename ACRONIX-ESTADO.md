@@ -51,3 +51,9 @@ Run 43691277396 final: unit/build/manifiesto OK; 451 pruebas instrumentadas, 95 
 ## Flujos integrados de prueba y comprobación
 
 Run 43692020984 completo: unit/build/manifest OK; 451 pruebas instrumentadas y 103 fallos, ocho nuevos respecto al run anterior por categorías fuera de pantalla. Se restaura orden de categorías principales antes de herramientas, conservando todas las entradas y assertions. Añadido flujo Compose Fold real (ajustes→persistencia→presentación, copia/undo/modo compartido, conservación de widgets/favoritos). Añadido Comprobar copia en Ajustes usando SAF y verificador central/payload sin restaurar; exportación se inspecciona en test Android. Nuevos tests aún pendientes de CI. Workflow ejecuta familias de integración primero y suite completa incluso si falla la focalizada. Restauración global/tres puntos siguen pendientes; no hay candidata estable.
+
+## CI y resistencia del inspector (lote en preparación)
+
+Preparada una única ejecución completa de instrumentación, sin filtrar ni omitir tests, para evitar doble ejecución sobre el mismo estado. Resúmenes JUnit con total/passed/failed/skipped por clase, sin copiar mensajes/trazas/capturas, para unitarias e instrumentadas. Nueve pruebas locales de scripts pasan, incluidas ejecución única y conservación del fallo de Gradle. Protección de profundidad JSON integrada antes del parser del manifiesto; tests JVM y Android del inspector añadidos, aún pendientes de CI.
+
+Run 43693135157 sigue activo al preparar el lote y 43693645479 pendiente. No se reemplaza el pendiente con otro push. Recuperación global/arranque y tres puntos aún no implementados, restore bloqueado. El inspector no garantiza recuperabilidad.

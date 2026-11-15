@@ -43,7 +43,9 @@ object AcronixBackup {
                 val buffer = java.io.ByteArrayOutputStream()
                 zip.getInputStream(entry).use { copyLimited(it, buffer, 1024L * 1024) }
                 val bytes = buffer.toByteArray()
-                val manifest = JSONObject(String(bytes, Charsets.UTF_8))
+                val manifestText = String(bytes, Charsets.UTF_8)
+                BackupJsonLimits.checkNesting(manifestText)
+                val manifest = JSONObject(manifestText)
                 require(manifest.getString("format") == "acronix-backup" && manifest.getInt("version") == 2 &&
                     manifest.getInt("dbVersion") == 34) { "Unsupported backup version" }
                 val entries = manifest.getJSONObject("entries")

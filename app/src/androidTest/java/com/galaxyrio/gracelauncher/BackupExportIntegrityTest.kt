@@ -13,6 +13,21 @@ import java.util.zip.ZipFile
 
 @RunWith(AndroidJUnit4::class)
 class BackupExportIntegrityTest {
+    @Test fun maliciouslyNestedManifestIsRejectedWithoutApplyingData() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val file = java.io.File.createTempFile("malformed-backup-test", ".zip", context.cacheDir)
+        try {
+            java.util.zip.ZipOutputStream(file.outputStream()).use { zip ->
+                zip.putNextEntry(java.util.zip.ZipEntry("manifest.json"))
+                zip.write(("[".repeat(17) + "]".repeat(17)).toByteArray())
+                zip.closeEntry()
+            }
+            org.junit.Assert.assertThrows(IllegalArgumentException::class.java) {
+                runBlocking { AcronixBackup.inspect(context, android.net.Uri.fromFile(file)) }
+            }
+        } finally { file.delete() }
+    }
+
     @Test fun exportManifestCoversEveryPayload() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val file = AcronixBackup.shareFile(context)
