@@ -38,6 +38,17 @@ jobs:
         run: python3 -m unittest discover -s scripts/tests -v
       - name: Ejecutar pruebas unitarias y compilar variante estandar
         run: bash gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest --stacktrace --no-daemon
+      - name: Resumir resultados unitarios sin datos de los casos
+        if: always()
+        run: python3 scripts/summarize_tests.py --root app/build/test-results/testDebugUnitTest --output app/build/acronix-reports/unit-summary.json
+      - name: Conservar recuentos unitarios sanitizados
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-counts
+          path: app/build/acronix-reports/unit-summary.json
+          if-no-files-found: warn
+          retention-days: 14
       - name: Verificar manifiesto de la variante estandar
         shell: bash
         run: |
@@ -81,3 +92,11 @@ jobs:
           arch: x86_64
           disable-animations: true
           script: bash scripts/check_android.sh
+      - name: Conservar recuentos sanitizados de instrumentacion
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: instrumentation-counts
+          path: app/build/acronix-reports/instrumentation-summary.json
+          if-no-files-found: warn
+          retention-days: 14

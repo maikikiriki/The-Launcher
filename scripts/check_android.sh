@@ -1,12 +1,11 @@
 #!/usr/bin/env bash
-# Always run the full suite, even if the focused integration tests fail.
+# One complete run avoids duplicate tests and state contamination between runs.
 set -u
-focused_status=0
-bash gradlew :app:connectedDebugAndroidTest --no-daemon --stacktrace \
-  -Pandroid.testInstrumentationRunnerArguments.class=com.galaxyrio.gracelauncher.AppLaunchRoutingTest,com.galaxyrio.gracelauncher.FoldPlacementUiTest,com.galaxyrio.gracelauncher.BackupExportIntegrityTest \
-  || focused_status=$?
-full_status=0
-bash gradlew :app:connectedDebugAndroidTest --no-daemon --stacktrace || full_status=$?
-if [ "$focused_status" -ne 0 ] || [ "$full_status" -ne 0 ]; then
+suite_status=0
+bash gradlew :app:connectedDebugAndroidTest --no-daemon --stacktrace || suite_status=$?
+summary_status=0
+python3 scripts/summarize_tests.py --root app/build/outputs/androidTest-results/connected \
+  --output app/build/acronix-reports/instrumentation-summary.json || summary_status=$?
+if [ "$suite_status" -ne 0 ] || [ "$summary_status" -ne 0 ]; then
   exit 1
 fi
