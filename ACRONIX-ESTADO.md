@@ -23,3 +23,7 @@ Ejecutar CI con las correcciones de migraciones y del contexto de lanzamiento. M
 ## Preparación de firma y diagnóstico
 
 Gradle admite firma release opcional mediante cuatro variables de entorno (sin clave provisionada ni APK firmada verificada). El comprobador de candidatas rechaza paquete/certificado/versión incompatibles; 4 pruebas locales con herramientas simuladas pasan. Falta comprobar herramientas y APK reales. Diagnóstico preparado para consultas fuera del hilo UI; pendiente de CI y Fold.
+
+## Ciclo operativo siguiente
+
+Run 43689388816: unit-and-build OK; 450 pruebas instrumentadas finalizadas, 97 fallos. El log de progreso muestra 5 omitidas antes de terminar; falta resumen JUnit final para calcular aprobadas/omitidas sin ambigüedad. Migración de iconos ya no aparece como fallo. Se corrige fixture de icon packs del test de rutas y apertura de grupos plegados del editor. Correcciones pendientes de CI. Modelo/store Fold inicial con pruebas: aún sin integración en pantalla, sin cobertura backup y sin validación física. Restauración y journal siguen pendientes/bloqueados.
