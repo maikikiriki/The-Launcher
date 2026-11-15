@@ -7,6 +7,21 @@ plugins {
 }
 
 android {
+    // Only an explicitly provisioned owner-controlled key may sign release builds.
+    // PR builds receive none of these environment variables.
+    val stableSigning = listOf("ACRONIX_KEYSTORE_FILE", "ACRONIX_KEYSTORE_PASSWORD",
+        "ACRONIX_KEY_ALIAS", "ACRONIX_KEY_PASSWORD").map { providers.environmentVariable(it).orNull }
+    require(stableSigning.all { it == null } || stableSigning.all { !it.isNullOrBlank() }) {
+        "Incomplete Acronix release signing configuration"
+    }
+    if (stableSigning.all { !it.isNullOrBlank() }) {
+        signingConfigs.create("stable") {
+            storeFile = file(stableSigning[0]!!)
+            storePassword = stableSigning[1]
+            keyAlias = stableSigning[2]
+            keyPassword = stableSigning[3]
+        }
+    }
     namespace = "com.galaxyrio.gracelauncher"
     compileSdk = 37
     buildToolsVersion = "36.1.0"
@@ -23,6 +38,7 @@ android {
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("stable")
             optimization {
                 enable = true
             }
