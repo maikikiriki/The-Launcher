@@ -120,7 +120,7 @@ class FavoritesEditorTest {
         compose.onNodeWithTag("category_editor_all_apps").performScrollTo()
         assertTrue(bounds("favorite:${apps[2].key}").bottom <= bounds("category_editor_all_apps").top)
         apps.take(3).forEach { app ->
-            compose.onNodeWithTag("favorite_all:${app.key}").performScrollTo().let {
+            compose.onNodeWithTag("favorite_all:${app.key}").also { compose.onNodeWithTag("category_editor_list").performScrollToNode(hasTestTag("favorite_all:${app.key}")) }.performScrollTo().let {
                 if (app in selected) it.assertIsOn() else it.assertIsOff()
             }
         }
@@ -130,11 +130,11 @@ class FavoritesEditorTest {
 
     @Test fun selectionsAppendToTheSelectedSectionAndUncheckingDoesNotRemoveTheAppFromAllApps() {
         show(listOf(apps[3], apps[0]))
-        compose.onNodeWithTag("favorite_all:${apps[2].key}").performScrollTo().performClick()
+        compose.onNodeWithTag("favorite_all:${apps[2].key}").also { compose.onNodeWithTag("category_editor_list").performScrollToNode(hasTestTag("favorite_all:${apps[2].key}")) }.performScrollTo().performClick()
         compose.onNodeWithTag("category_editor_list").performScrollToIndex(0)
         assertSelectedOrder(listOf(apps[3], apps[0], apps[2]))
         compose.onNodeWithTag("favorite:${apps[0].key}").performClick()
-        compose.onNodeWithTag("favorite_all:${apps[0].key}").performScrollTo().assertIsOff()
+        compose.onNodeWithTag("favorite_all:${apps[0].key}").also { compose.onNodeWithTag("category_editor_list").performScrollToNode(hasTestTag("favorite_all:${apps[0].key}")) }.performScrollTo().assertIsOff()
         assertEquals(listOf(apps[3].key, apps[2].key), state.favoriteOrder)
         assertEquals(2, toggles)
         assertEquals(0, commits)
@@ -216,7 +216,7 @@ class FavoritesEditorTest {
         show(emptyList())
         compose.onNodeWithText(InstrumentationRegistry.getInstrumentation().targetContext.getString(R.string.favorites_empty)).assertIsDisplayed()
         compose.onNodeWithTag("category_editor_list").performTouchInput { swipeUp() }
-        compose.onNodeWithTag("favorite_all:${apps.last().key}").performScrollTo().performClick()
+        compose.onNodeWithTag("favorite_all:${apps.last().key}").also { compose.onNodeWithTag("category_editor_list").performScrollToNode(hasTestTag("favorite_all:${apps.last().key}")) }.performScrollTo().performClick()
         compose.onNodeWithTag("category_editor_list").performScrollToIndex(0)
         compose.onNodeWithTag("favorite:${apps.last().key}").assertIsOn()
         assertEquals(listOf(apps.last().key), state.favoriteOrder)

@@ -34,7 +34,7 @@ class IconPackUiTest {
                 ), onBack = {}, initialPage = initialPage)
             }
         }
-        if (initialPage == "Themes") compose.onNodeWithTag("settings_icon_pack").performScrollTo().performClick()
+        if (initialPage == "Themes") compose.onNodeWithTag("settings_icon_pack").also { compose.onNodeWithTag("settings_list").performScrollToNode(hasTestTag("settings_icon_pack")) }.performClick()
         compose.onNodeWithTag("icon_pack_settings").assertIsDisplayed()
     }
 
