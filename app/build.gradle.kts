@@ -80,6 +80,7 @@ room {
 }
 
 dependencies {
+    implementation("androidx.window:window:1.5.1")
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.animation)

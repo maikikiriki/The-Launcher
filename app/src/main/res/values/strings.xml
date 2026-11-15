@@ -1264,4 +1264,6 @@
     <string name="acronix_diag_android">Android version</string>
     <string name="acronix_diag_android_version">API level %1$d; Fold screen transitions need physical testing.</string>
     <string name="acronix_diag_unknown">Could not read this information.</string>
+    <string name="acronix_fold_title">Foldable screens</string>
+    <string name="acronix_fold_summary">Independent clock and baseline placement; widgets and favorites stay shared.</string>
 </resources>

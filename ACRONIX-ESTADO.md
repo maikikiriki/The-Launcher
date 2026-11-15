@@ -31,3 +31,11 @@ Run 43689388816: unit-and-build OK; 450 pruebas instrumentadas finalizadas, 97 f
 ## Recuperación: primer componente persistente
 
 RecoveryJournal escribe estado APPLYING antes de devolver control al escritor, usando fichero temporal, fsync y movimiento atómico; COMMITTED evita revertir una operación finalizada. Una reversión fallida deja el journal para reintento. Cinco pruebas JVM cubren reapertura, reversión fallida, operación completada, rechazo de operación concurrente y corrupción. Pendiente de ejecución CI y validación Android/fsync. No está integrado con arranque, snapshots ni Room: NO habilita restauración ni acredita recuperación completa. Root debe ser privado y persistente; faltan integración noBackupFilesDir, coordinación de escrituras, snapshots y tres puntos de retención.
+
+## Integración de presentación Fold y ZIP
+
+El inicio ahora aplica posición/visibilidad por superficie mediante FoldLayoutStore y WindowInfoTracker (WindowManager 1.5.1). Ajustes > Pantallas plegables permite modo compartido/independiente, seleccionar manualmente superficie cuando Android no informa pliegue, desplazar reloj y copiar con confirmación. Widgets y favoritos permanecen compartidos deliberadamente: no está completado el conjunto de personalización independiente. Prueba unitaria comprueba que la presentación no sustituye IDs ni favoritos. Falta prueba Compose y Fold físico; textos de controles pendientes de localización completa.
+
+La exportación verifica también el directorio central ZIP y prueba su truncamiento. Run 43691031909: unit/build/manifest OK; el log final de instrumentación indica 451 tests y 95 fallos. El progreso mostraba 5 skipped, no se deduce un recuento final passed/skipped sin JUnit. Run del journal 43691277396 ya inició; nuevas integraciones pendientes de CI. Journal sigue sin coordinador de datos reales ni recuperación de arranque: no puede habilitarse restauración.
+
+Referencia API: https://developer.android.com/jetpack/androidx/releases/window (WindowInfoTracker/FoldingFeature). La ausencia de FoldingFeature NO se considera prueba de pantalla exterior: se utiliza la selección manual.

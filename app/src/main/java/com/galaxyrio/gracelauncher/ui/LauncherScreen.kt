@@ -169,7 +169,9 @@ fun LauncherRoute(
     onCloseSettings: () -> Unit = {},
     widgetEditRequest: Int = 0,
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val rawUiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val foldHome = com.galaxyrio.gracelauncher.ui.settings.foldPresentation(rawUiState.settings.homeLayout)
+    val uiState = rawUiState.copy(settings = rawUiState.settings.copy(homeLayout = foldHome))
     val context = LocalContext.current
     val chooseAppStoreTitle = stringResource(R.string.choose_app_store)
     val launchView = LocalView.current

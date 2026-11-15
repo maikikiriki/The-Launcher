@@ -5,6 +5,15 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class FoldLayoutsTest {
+    @Test fun renderedPlacementNeverReplacesWidgetIdentityOrFavorites() {
+        val base = HomeLayout(widgetId = 41, homeOrder = listOf("app:a", "widget:41"))
+        val state = FoldLayouts(independent = true, outer = HomeLayout(widgetId = 99, topOffsetDp = 32f))
+        val rendered = state.presentation(base, FoldSurface.Outer)
+        assertEquals(41, rendered.widgetId)
+        assertEquals(base.homeOrder, rendered.homeOrder)
+        assertEquals(32f, rendered.topOffsetDp)
+        assertEquals(base, state.sharedMode().presentation(base, FoldSurface.Outer))
+    }
     @Test fun sharedDefaultUsesExistingLayoutOnBothSurfaces() {
         val existing = HomeLayout(widgetId = 41)
         val state = FoldLayouts(shared = existing)

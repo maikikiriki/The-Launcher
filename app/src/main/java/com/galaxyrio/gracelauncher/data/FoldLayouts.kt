@@ -24,6 +24,13 @@ data class FoldLayouts(
         return edit(target, layout(source))
     }
 
+    fun presentation(base: HomeLayout, surface: FoldSurface): HomeLayout {
+        if (!independent) return base
+        val selected = layout(surface)
+        return base.copy(topOffsetDp = selected.topOffsetDp, baselineOffsetDp = selected.baselineOffsetDp,
+            baselineEnabled = selected.baselineEnabled, clockCalendarEnabled = selected.clockCalendarEnabled)
+    }
+
     // Switching mode retains the independent drafts so returning does not erase them.
     fun sharedMode(): FoldLayouts = copy(independent = false)
 }

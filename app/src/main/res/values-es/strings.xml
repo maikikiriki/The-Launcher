@@ -1226,4 +1226,6 @@
     <string name="acronix_diag_android">Versión Android</string>
     <string name="acronix_diag_android_version">Nivel API %1$d; las transiciones del Fold requieren pruebas físicas.</string>
     <string name="acronix_diag_unknown">No se puede consultar esta información.</string>
+    <string name="acronix_fold_title">Pantallas plegables</string>
+    <string name="acronix_fold_summary">Posición independiente del reloj y línea base; widgets y favoritos compartidos.</string>
 </resources>
