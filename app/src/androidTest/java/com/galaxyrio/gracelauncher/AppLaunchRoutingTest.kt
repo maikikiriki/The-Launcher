@@ -50,7 +50,8 @@ class AppLaunchRoutingTest {
             val context = RecordingContext()
             val bounds = Rect(10, 20, 60, 70)
             val options = Bundle().apply { putString("animation", "preserved") }
-            assertTrue(AppRepository(context).launch(app.copy(user = user), bounds, options))
+            assertTrue(AppRepository(context, com.galaxyrio.gracelauncher.data.icons.IconPackRepository.get(
+                InstrumentationRegistry.getInstrumentation().targetContext)).launch(app.copy(user = user), bounds, options))
             val (intent, actualOptions) = context.launches.single()
             assertEquals(Intent.ACTION_MAIN, intent.action)
             assertEquals(setOf(Intent.CATEGORY_LAUNCHER), intent.categories)
@@ -65,7 +66,8 @@ class AppLaunchRoutingTest {
     @Test fun personalLaunchFailuresAreReportedWithoutAnotherLaunchAttempt() {
         for (failure in listOf(ActivityNotFoundException("Missing entry"), SecurityException("Denied"))) {
             val context = RecordingContext(failure)
-            assertFalse(AppRepository(context).launch(app))
+            assertFalse(AppRepository(context, com.galaxyrio.gracelauncher.data.icons.IconPackRepository.get(
+                InstrumentationRegistry.getInstrumentation().targetContext)).launch(app))
             assertEquals(1, context.launches.size)
             assertEquals(0, context.profileServiceRequests)
         }
@@ -75,7 +77,8 @@ class AppLaunchRoutingTest {
         val context = RecordingContext()
         val otherUser = listOf(UserHandle.getUserHandleForUid(0), UserHandle.getUserHandleForUid(100_000))
             .first { it != Process.myUserHandle() }
-        assertFalse(AppRepository(context).launch(app.copy(user = otherUser)))
+        assertFalse(AppRepository(context, com.galaxyrio.gracelauncher.data.icons.IconPackRepository.get(
+                InstrumentationRegistry.getInstrumentation().targetContext)).launch(app.copy(user = otherUser)))
         assertEquals(1, context.profileServiceRequests)
         assertTrue(context.launches.isEmpty())
     }
