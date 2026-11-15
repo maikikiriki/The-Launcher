@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -35,6 +37,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.galaxyrio.gracelauncher.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /** On-demand, read-only diagnosis. No user data is collected or transmitted. */
 private data class DiagnosticRow(val label: Int, val info: String, val status: Int, val action: Intent? = null)
@@ -44,7 +48,10 @@ internal fun AcronixDiagnosticsSettings(onBack: () -> Unit) {
     val context = LocalContext.current
     var refresh by remember { mutableIntStateOf(0) }
     var openFailed by remember { mutableStateOf(false) }
-    val checks = remember(context, refresh) { collectDiagnostics(context) }
+    val checks by produceState<List<DiagnosticRow>?>(null, context, refresh) {
+        value = null
+        value = withContext(Dispatchers.IO) { collectDiagnostics(context) }
+    }
     SettingsScaffold(stringResource(R.string.acronix_diag_title), "acronix_diagnostics", onBack) { padding: PaddingValues ->
         Column(Modifier.padding(padding).verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 24.dp),
@@ -52,12 +59,13 @@ internal fun AcronixDiagnosticsSettings(onBack: () -> Unit) {
             Text(stringResource(R.string.acronix_diag_intro), style = MaterialTheme.typography.bodyLarge)
             Text(stringResource(R.string.acronix_diag_privacy),
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Button(onClick = { refresh++ }, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = { refresh++ }, modifier = Modifier.fillMaxWidth(), enabled = checks != null) {
                 Text(stringResource(R.string.acronix_diag_refresh))
             }
             if (openFailed) Text(stringResource(R.string.acronix_diag_open_failed),
                 color = MaterialTheme.colorScheme.error)
-            checks.forEach { check ->
+            if (checks == null) CircularProgressIndicator()
+            checks.orEmpty().forEach { check ->
                 Text(stringResource(check.label), style = MaterialTheme.typography.titleMedium)
                 Text(stringResource(check.status), color = if (check.status == R.string.acronix_diag_action)
                     MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
