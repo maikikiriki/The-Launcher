@@ -8,7 +8,10 @@ import subprocess
 from pathlib import Path
 
 
-def verify(apk, expected_certificate, minimum_version_code, apksigner='apksigner', aapt='aapt'):
+def verify(apk, expected_certificate, minimum_version_code, apksigner='apksigner', aapt='aapt',
+           application_id='com.acronix.launcher'):
+    if application_id not in {'com.acronix.launcher', 'com.acronix.launcher.preview'}:
+        raise ValueError('Only explicitly recognized Acronix package identifiers are allowed')
     expected = expected_certificate.replace(':', '').lower()
     if not re.fullmatch(r'[0-9a-f]{64}', expected):
         raise ValueError('Expected public certificate SHA-256 is required')
@@ -20,7 +23,7 @@ def verify(apk, expected_certificate, minimum_version_code, apksigner='apksigner
         raise ValueError('Certificate mismatch or unsupported signer count; do not install')
     badging = subprocess.check_output([aapt, 'dump', 'badging', str(apk)], text=True)
     package = re.search(r"^package: name='([^']+)' versionCode='(\d+)'", badging, re.M)
-    if not package or package[1] != 'com.acronix.launcher':
+    if not package or package[1] != application_id:
         raise ValueError('Unexpected applicationId; do not install')
     version = int(package[2])
     if version < minimum_version_code:
@@ -38,12 +41,14 @@ def main():
     parser.add_argument('--apk', type=Path, required=True)
     parser.add_argument('--expected-certificate', required=True)
     parser.add_argument('--minimum-version-code', type=int, required=True)
+    parser.add_argument('--application-id', default='com.acronix.launcher',
+                        choices=['com.acronix.launcher', 'com.acronix.launcher.preview'])
     parser.add_argument('--apksigner', default='apksigner')
     parser.add_argument('--aapt', default='aapt')
     args = parser.parse_args()
     try:
         print(json.dumps(verify(args.apk, args.expected_certificate, args.minimum_version_code,
-                                args.apksigner, args.aapt), indent=2))
+                                args.apksigner, args.aapt, args.application_id), indent=2))
     except (ValueError, OSError, subprocess.CalledProcessError) as error:
         parser.exit(1, f'Candidate rejected: {type(error).__name__}\n')
 
