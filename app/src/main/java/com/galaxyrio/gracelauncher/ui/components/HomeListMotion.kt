@@ -31,7 +31,7 @@ internal class HomeListMotion(initialDrawerOpen: Boolean) {
         // Re-enter from below only once fully hidden. Interrupted transitions
         // continue from their current pose rather than jumping across the screen.
         if (incoming.value.x == 0f) incoming.snapTo(Offset(0f, 1f))
-        launch { incoming.animateTo(Offset(1f, 0f), tween(260, easing = FastOutSlowInEasing)) }
-        launch { outgoing.animateTo(Offset(0f, -1f), tween(260, easing = FastOutSlowInEasing)) }
+        launch { incoming.animateTo(Offset(1f, 0f), tween(190, easing = FastOutSlowInEasing)) }
+        launch { outgoing.animateTo(Offset(0f, -1f), tween(190, easing = FastOutSlowInEasing)) }
     }
 }
