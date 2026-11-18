@@ -10,7 +10,7 @@ from pathlib import Path
 
 def verify(apk, expected_certificate, minimum_version_code, apksigner='apksigner', aapt='aapt',
            application_id='com.acronix.launcher'):
-    if application_id not in {'com.acronix.launcher', 'com.acronix.launcher.preview'}:
+    if application_id not in {'com.acronix.launcher', 'com.acronix.launcher.preview', 'com.acronix.launcher.signed'}:
         raise ValueError('Only explicitly recognized Acronix package identifiers are allowed')
     expected = expected_certificate.replace(':', '').lower()
     if not re.fullmatch(r'[0-9a-f]{64}', expected):
