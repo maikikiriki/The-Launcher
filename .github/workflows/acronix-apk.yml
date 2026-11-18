@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - acronix-v0.1
+      - acronix-auditoria-desarrollo
     paths:
       - 'app/**'
       - 'gradle/**'
@@ -62,44 +63,53 @@ jobs:
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Compilar APK de prueba (estandar y completa)
+      - name: Compilar APK de prueba estandar
         run: |
           chmod +x ./gradlew
-          ./gradlew :app:assembleDebug :app:assembleFullDebug --stacktrace --no-daemon
+          ./gradlew :app:assembleDebug --stacktrace --no-daemon
 
-      - name: Verificar servicios sensibles excluidos del APK de pruebas
+      - name: Verificar paquete, firma y manifiesto de la variante segura
         shell: bash
         run: |
           set -euo pipefail
           APK="app/build/outputs/apk/debug/app-debug.apk"
           AAPT="$ANDROID_HOME/build-tools/36.1.0/aapt"
           "$AAPT" dump badging "$APK" | grep -E '^package:|^application-label:'
+          "$AAPT" dump badging "$APK" | grep -Eq "^package: name='com\\.acronix\\.launcher'"
+          "$ANDROID_HOME/build-tools/36.1.0/apksigner" verify --verbose "$APK"
           "$AAPT" dump xmltree "$APK" AndroidManifest.xml > merged-manifest.txt
           if grep -E 'BIND_ACCESSIBILITY_SERVICE|BIND_NOTIFICATION_LISTENER_SERVICE' merged-manifest.txt; then
-            echo "::error::El APK de pruebas sigue declarando servicios sensibles"
+            echo "::error::El APK estandar declara servicios sensibles"
             exit 1
           fi
-          echo "Verificado: la variante estandar no declara servicios sensibles."
-          FULL="app/build/outputs/apk/fullDebug/app-fullDebug.apk"
-          "$AAPT" dump xmltree "$FULL" AndroidManifest.xml > full-manifest.txt
-          grep -q BIND_ACCESSIBILITY_SERVICE full-manifest.txt || { echo "::error::Falta el servicio de accesibilidad en la variante completa"; exit 1; }
-          grep -q BIND_NOTIFICATION_LISTENER_SERVICE full-manifest.txt || { echo "::error::Falta el servicio de notificaciones en la variante completa"; exit 1; }
-          echo "Verificado: la variante completa declara ambos servicios con permisos especiales de Android."
+          echo "Verificado: paquete Acronix separado y APK debug firmado, sin servicios sensibles."
 
-      - name: Guardar APK para descargar
-        if: success()
+      - name: Guardar APK estandar para pruebas en movil
         uses: actions/upload-artifact@v4
         with:
-          name: Acronix-Launcher-v0.1.3-estandar
+          name: Acronix-Launcher-test-${{ github.sha }}-estandar
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
+
+      - name: Compilar variante completa opcional (permisos explicitos)
+        run: ./gradlew :app:assembleFullDebug --stacktrace --no-daemon
+
+      - name: Verificar manifiesto y firma de variante completa
+        shell: bash
+        run: |
+          set -euo pipefail
+          FULL="app/build/outputs/apk/fullDebug/app-fullDebug.apk"
+          "$ANDROID_HOME/build-tools/36.1.0/apksigner" verify --verbose "$FULL"
+          "$ANDROID_HOME/build-tools/36.1.0/aapt" dump xmltree "$FULL" AndroidManifest.xml > full-manifest.txt
+          grep -q BIND_ACCESSIBILITY_SERVICE full-manifest.txt || { echo "::error::Falta el servicio de accesibilidad"; exit 1; }
+          grep -q BIND_NOTIFICATION_LISTENER_SERVICE full-manifest.txt || { echo "::error::Falta el servicio de notificaciones"; exit 1; }
 
       - name: Guardar APK con accesibilidad y notificaciones
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Acronix-Launcher-v0.1.3-completo
+          name: Acronix-Launcher-test-${{ github.sha }}-completo
           path: app/build/outputs/apk/fullDebug/app-fullDebug.apk
           if-no-files-found: error
           retention-days: 30
