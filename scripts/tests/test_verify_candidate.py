@@ -43,6 +43,15 @@ class CandidateGateTest(unittest.TestCase):
             self.run_gate(package='com.galaxyrio.gracelauncher',
                           expected_package='com.galaxyrio.gracelauncher')
 
+    def test_new_owner_signed_package_must_match_exact_expected_identity(self):
+        result = self.run_gate(package='com.acronix.launcher.signed',
+                               expected_package='com.acronix.launcher.signed',
+                               version=10001, minimum=10001)
+        self.assertEqual('com.acronix.launcher.signed', result['applicationId'])
+        with self.assertRaises(ValueError):
+            self.run_gate(package='com.acronix.launcher.signed',
+                          expected_package='com.acronix.launcher.preview')
+
     def test_preview_downgrade_fails(self):
         with self.assertRaises(ValueError):
             self.run_gate(package='com.acronix.launcher.preview',
