@@ -70,6 +70,7 @@ internal fun foldPresentation(shared: HomeLayout, preferences: SharedPreferences
 
 @Composable
 internal fun AcronixFoldSettings(shared: HomeLayout, onBack: () -> Unit, preferences: SharedPreferences? = null) {
+    val context = LocalContext.current
     val (prefs, revision) = foldPreferences(preferences)
     val scope = rememberCoroutineScope()
     var layouts by remember { mutableStateOf(FoldLayouts(shared = shared)) }
@@ -143,7 +144,24 @@ internal fun AcronixFoldSettings(shared: HomeLayout, onBack: () -> Unit, prefere
     copyTarget?.let { target ->
         AlertDialog(onDismissRequest = { copyTarget = null }, title = { Text(stringResource(R.string.fold_confirm)) },
             text = { Text(stringResource(R.string.fold_copy_warning)) },
-            confirmButton = { TextButton(modifier = Modifier.testTag("fold_copy_confirm"), onClick = { save(layouts.copyTo(surface, target)); copyTarget = null }) { Text(stringResource(R.string.fold_copy)) } },
+            confirmButton = { TextButton(modifier = Modifier.testTag("fold_copy_confirm"), enabled = !busy, onClick = {
+                copyTarget = null
+                scope.launch {
+                    busy = true
+                    try {
+                        // Do not overwrite the destination until a verified pre-change
+                        // private point has been published. No silent fallback.
+                        AcronixRecoveryPoints.create(context)
+                        val changed = layouts.copyTo(surface, target)
+                        withContext(Dispatchers.IO) { FoldLayoutStore(prefs).save(changed) }
+                        layouts = changed
+                        failed = false
+                    } catch (error: Exception) {
+                        if (error is CancellationException) throw error
+                        failed = true
+                    } finally { busy = false }
+                }
+            }) { Text(stringResource(R.string.fold_copy)) } },
             dismissButton = { TextButton(onClick = { copyTarget = null }) { Text(stringResource(R.string.settings_cancel)) } })
     }
 }
