@@ -70,7 +70,7 @@ jobs:
           test -s "$APK"
           "$ANDROID_HOME/build-tools/36.1.0/apksigner" verify --verbose --print-certs "$APK"
           "$ANDROID_HOME/build-tools/36.1.0/aapt" dump badging "$APK" > "$RUNNER_TEMP/acronix-badging"
-          grep -Fq "package: name='com.acronix.launcher.preview'" "$RUNNER_TEMP/acronix-badging"
+          grep -Fq "package: name='com.acronix.launcher.signed'" "$RUNNER_TEMP/acronix-badging"
           "$ANDROID_HOME/build-tools/36.1.0/aapt" dump xmltree "$APK" AndroidManifest.xml > "$RUNNER_TEMP/acronix-merged-manifest"
           if grep -E 'BIND_ACCESSIBILITY_SERVICE|BIND_NOTIFICATION_LISTENER_SERVICE' "$RUNNER_TEMP/acronix-merged-manifest"; then
             echo "::error::Vista previa firmada contiene servicios de privilegios especiales"
