@@ -137,16 +137,20 @@ object AcronixBackup {
     }
 
     suspend fun shareFile(context: Context): File = withContext(Dispatchers.IO) {
-        val dir = File(context.cacheDir, "acronix_shared").apply { mkdirs() }
-        dir.listFiles().orEmpty().forEach { it.delete() }
+        val dir = File(context.cacheDir, "acronix_shared")
+        check(dir.isDirectory || dir.mkdirs()) { "Unable to prepare sharing directory" }
         val output = File(dir, "Acronix-backup.zip")
+        // Never destroy the last verified share copy before a new snapshot is ready.
+        val staged = File.createTempFile("acronix_share_staged_", ".zip", dir)
         try {
-            output.outputStream().use { exportTo(context, it) }
-            inspect(context, Uri.fromFile(output))
+            staged.outputStream().use { exportTo(context, it) }
+            inspect(context, Uri.fromFile(staged))
+            java.nio.file.Files.move(staged.toPath(), output.toPath(),
+                java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING)
             output
-        } catch (error: Exception) {
-            output.delete()
-            throw error
+        } finally {
+            staged.delete()
         }
     }
 
