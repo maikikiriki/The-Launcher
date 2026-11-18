@@ -36,15 +36,16 @@ internal object AcronixRecoveryPoints {
             .sortedWith(compareByDescending<Point> { it.createdAt }.thenByDescending { it.name })
             .toList()
 
-    suspend fun list(context: Context): List<Point> = withContext(Dispatchers.IO) {
+    /** Directory override is only for isolated instrumented tests. */
+    suspend fun list(context: Context, directory: File = root(context)): List<Point> = withContext(Dispatchers.IO) {
         mutex.lock()
-        try { available(root(context)) } finally { mutex.unlock() }
+        try { available(directory) } finally { mutex.unlock() }
     }
 
-    suspend fun create(context: Context): Point = withContext(Dispatchers.IO) {
+    suspend fun create(context: Context, directory: File = root(context)): Point = withContext(Dispatchers.IO) {
         mutex.lock()
         try {
-            val dir = root(context)
+            val dir = directory
             check(dir.isDirectory || dir.mkdirs()) { "Cannot create private recovery directory" }
             val pending = File.createTempFile(".pending-", ".zip", dir)
             try {
@@ -52,9 +53,12 @@ internal object AcronixRecoveryPoints {
                 // A failed export leaves all previously verified points untouched.
                 AcronixBackup.export(context, Uri.fromFile(pending))
                 FileOutputStream(pending, true).use { it.fd.sync() }
-                val name = "point-${System.currentTimeMillis()}-${UUID.randomUUID().toString().replace("-", "")}.zip"
+                val latest = available(dir).maxOfOrNull { it.name.substringAfter("point-").substringBefore('-').toLong() } ?: 0L
+                val time = maxOf(System.currentTimeMillis(), latest + 1L)
+                val name = "point-${time}-${UUID.randomUUID().toString().replace("-", "")}.zip"
                 val point = File(dir, name)
                 Files.move(pending.toPath(), point.toPath(), StandardCopyOption.ATOMIC_MOVE)
+                check(point.setLastModified(time)) { "Cannot preserve recovery point timestamp" }
                 // Verify the published file before touching any older point.
                 try {
                     AcronixBackup.inspect(context, Uri.fromFile(point))
@@ -80,10 +84,10 @@ internal object AcronixRecoveryPoints {
         }
     }
 
-    suspend fun verify(context: Context, point: Point): Boolean = withContext(Dispatchers.IO) {
+    suspend fun verify(context: Context, point: Point, directory: File = root(context)): Boolean = withContext(Dispatchers.IO) {
         mutex.lock()
         try {
-            val dir = root(context)
+            val dir = directory
             val file = File(dir, point.name)
             if (!fileName.matches(point.name) || !file.isFile ||
                 Files.isSymbolicLink(file.toPath()) || file.length() <= 0L) return@withContext false
