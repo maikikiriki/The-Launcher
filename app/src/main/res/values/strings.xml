@@ -1217,6 +1217,14 @@
     <string name="acronix_migration_applied">Profile requested. Check the appearance and grant any necessary permissions in Android.</string>
 
     <string name="acronix_accessibility_standard_unavailable">This standard test build does not include the accessibility service. The preference below does not enable that service. Android keeps the protected features unavailable; do not disable Play Protect to install another variant.</string>
+    <string name="acronix_checkpoint_explanation">Private, verified recovery points: at most three. They are not encrypted and are kept in this installation only. Snapshot export is not fully transactional and restoration remains disabled until crash-safe recovery is proven.</string>
+    <string name="acronix_checkpoint_create">Create private recovery point</string>
+    <string name="acronix_checkpoint_created">New private recovery point verified.</string>
+    <string name="acronix_checkpoint_item">Recovery point: %1$s</string>
+    <string name="acronix_checkpoint_empty">No private recovery points yet.</string>
+    <string name="acronix_checkpoint_verify">Verify this recovery point</string>
+    <string name="acronix_checkpoint_verified">Recovery point contents and structure verified. Restoration is not enabled.</string>
+    <string name="acronix_checkpoint_invalid">This recovery point failed integrity validation. Existing data was not modified.</string>
     <string name="acronix_backup_title">Backup and transfer</string>
     <string name="acronix_backup_summary">Import, export or share your Acronix configuration, favorites, folders, icons and local fonts.</string>
     <string name="acronix_backup_warning">Backups can contain sensitive personal information and are not encrypted. Keep them private. Backups belong to Acronix; they cannot automatically read original Grace data. Android widget permissions may need to be renewed after restoring.</string>
