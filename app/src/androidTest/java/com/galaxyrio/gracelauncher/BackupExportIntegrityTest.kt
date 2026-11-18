@@ -28,6 +28,23 @@ class BackupExportIntegrityTest {
         } finally { file.delete() }
     }
 
+    @Test fun safExportTruncatesOldDocumentAndVerifiesWrittenBytes() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val file = java.io.File.createTempFile("acronix-export-destination", ".zip", context.cacheDir)
+        try {
+            // A pre-existing SAF document must not retain trailing bytes from a longer file.
+            file.writeBytes(ByteArray(256 * 1024) { 0x55.toByte() })
+            AcronixBackup.export(context, android.net.Uri.fromFile(file))
+            assertTrue(AcronixBackup.inspect(context, android.net.Uri.fromFile(file)).payloadCount >= 1)
+            // A partial document must never be reported as a verified export.
+            val bytes = file.readBytes()
+            file.writeBytes(bytes.copyOf(bytes.size - 22))
+            assertThrows(Exception::class.java) {
+                runBlocking { AcronixBackup.inspect(context, android.net.Uri.fromFile(file)) }
+            }
+        } finally { file.delete() }
+    }
+
     @Test fun exportManifestCoversEveryPayload() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val file = AcronixBackup.shareFile(context)
