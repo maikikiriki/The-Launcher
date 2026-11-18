@@ -72,17 +72,38 @@ object AcronixBackup {
     private val assetDirs = listOf("clock_fonts", "item_icons")
     private const val DATA_ENTRY = "data.json"
 
+    /**
+     * Build and verify the archive privately before touching the SAF destination.
+     * If snapshot generation fails (for example, disk full or a changed asset),
+     * the user's existing document is not truncated. The provider itself is not
+     * transactional: a failed write can still leave a partial external document.
+     * Only report success after reading the written document back and validating it.
+     */
     suspend fun export(context: Context, uri: Uri) = withContext(Dispatchers.IO) {
-        context.contentResolver.openOutputStream(uri, "w")?.use { exportTo(context, it) }
-            ?: error("Unable to open destination")
+        val staged = File.createTempFile("acronix_export_staged_", ".zip", context.cacheDir)
+        try {
+            staged.outputStream().use { exportTo(context, it) }
+            context.contentResolver.openOutputStream(uri, "wt")?.use { destination ->
+                staged.inputStream().use { source -> source.copyTo(destination) }
+            } ?: error("Unable to open destination")
+            inspect(context, uri)
+        } finally {
+            staged.delete()
+        }
     }
 
     suspend fun shareFile(context: Context): File = withContext(Dispatchers.IO) {
         val dir = File(context.cacheDir, "acronix_shared").apply { mkdirs() }
         dir.listFiles().orEmpty().forEach { it.delete() }
         val output = File(dir, "Acronix-backup.zip")
-        try { output.outputStream().use { exportTo(context, it) }; output }
-        catch (error: Exception) { output.delete(); throw error }
+        try {
+            output.outputStream().use { exportTo(context, it) }
+            inspect(context, Uri.fromFile(output))
+            output
+        } catch (error: Exception) {
+            output.delete()
+            throw error
+        }
     }
 
     private fun exportTo(context: Context, output: OutputStream) {
