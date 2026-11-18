@@ -12,7 +12,9 @@ concurrency:
 
 jobs:
   owner-signed-preview:
-    if: github.ref == 'refs/heads/acronix-auditoria-desarrollo'
+    # Never expose owner signing secrets to the mutable PR development branch.
+    # Enable only after owner review on the protected release branch.
+    if: github.ref == 'refs/heads/acronix-v0.1'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
