@@ -43,6 +43,14 @@ android {
                 enable = true
             }
         }
+        create("previewDebug") {
+            initWith(getByName("debug"))
+            // Safe isolated installation alongside existing Acronix installs.
+            // Do not change the original applicationId or remove its data.
+            applicationIdSuffix = ".preview"
+            versionNameSuffix = "-preview"
+            matchingFallbacks += listOf("debug")
+        }
         create("fullDebug") {
             initWith(getByName("debug"))
             matchingFallbacks += listOf("debug")
