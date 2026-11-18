@@ -42,7 +42,7 @@ def main():
     parser.add_argument('--expected-certificate', required=True)
     parser.add_argument('--minimum-version-code', type=int, required=True)
     parser.add_argument('--application-id', default='com.acronix.launcher',
-                        choices=['com.acronix.launcher', 'com.acronix.launcher.preview'])
+                        choices=['com.acronix.launcher', 'com.acronix.launcher.preview', 'com.acronix.launcher.signed'])
     parser.add_argument('--apksigner', default='apksigner')
     parser.add_argument('--aapt', default='aapt')
     args = parser.parse_args()
