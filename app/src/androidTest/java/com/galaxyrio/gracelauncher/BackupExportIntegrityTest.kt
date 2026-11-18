@@ -69,6 +69,10 @@ class BackupExportIntegrityTest {
             assertThrows(Exception::class.java) {
                 runBlocking { AcronixBackup.inspect(context, android.net.Uri.fromFile(file)) }
             }
+            // JUnit4 requires a void/Unit test method. assertThrows returns the
+            // exception object; without Unit Kotlin exposes a non-void method,
+            // and the Android runner rejects the entire test class.
+            Unit
         } finally { file.delete() }
     }
 
