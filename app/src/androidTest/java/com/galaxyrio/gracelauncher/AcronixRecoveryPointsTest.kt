@@ -14,6 +14,22 @@ import java.util.UUID
 class AcronixRecoveryPointsTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
 
+    @Test fun evenValidRecoveryPointCannotBypassDisabledRestore() = runBlocking {
+        val directory = File(context.cacheDir, "restore-gate-${UUID.randomUUID()}")
+        try {
+            val point = AcronixRecoveryPoints.create(context, directory)
+            assertTrue(AcronixRecoveryPoints.verify(context, point, directory))
+            try {
+                com.galaxyrio.gracelauncher.data.AcronixBackup.restore(
+                    context, android.net.Uri.fromFile(File(directory, point.name)))
+                fail("Global restore must stay disabled until crash-safe recovery passes")
+            } catch (expected: IllegalStateException) {
+                assertTrue(expected.message.orEmpty().contains("unavailable"))
+            }
+            assertTrue(File(directory, point.name).exists())
+        } finally { directory.deleteRecursively() }
+    }
+
     @Test fun retainsThreeValidatedPointsAndNeverTouchesTheRealPrivateDirectory() = runBlocking {
         // Only a disposable test directory is used, never the actual private points.
         val directory = File(context.cacheDir, "recovery-test-${UUID.randomUUID()}")
