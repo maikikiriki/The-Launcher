@@ -30,7 +30,11 @@ android {
         applicationId = "com.acronix.launcher"
         minSdk = 28
         targetSdk = 37
-        versionCode = 4
+        // Owner-signed builds use a strictly increasing CI run number.
+        // Local/debug builds keep their existing code for compatibility with
+        // the only installable testing packages; no automatic signing migration.
+        versionCode = providers.environmentVariable("ACRONIX_BUILD_VERSION_CODE").orNull
+            ?.toIntOrNull()?.also { require(it >= 5) } ?: 4
         versionName = "0.1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -51,6 +55,16 @@ android {
             versionNameSuffix = "-preview"
             matchingFallbacks += listOf("debug")
         }
+        create("previewRelease") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".preview"
+            versionNameSuffix = "-owner-preview"
+            // Without owner-controlled credentials the result is deliberately
+            // UNSIGNED and the manual workflow rejects it during verification.
+            signingConfig = signingConfigs.findByName("stable")
+            matchingFallbacks += listOf("release")
+        }
+
         create("fullDebug") {
             initWith(getByName("debug"))
             matchingFallbacks += listOf("debug")
