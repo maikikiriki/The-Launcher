@@ -28,6 +28,33 @@ class BackupExportIntegrityTest {
         } finally { file.delete() }
     }
 
+    @Test fun validZipHashesCannotHideAnUnusableBackupPayload() {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val file = java.io.File.createTempFile("invalid-payload-backup", ".zip", context.cacheDir)
+        try {
+            val data = JSONObject().put("format", "acronix-backup").put("version", 2)
+                .put("dbVersion", 34).put("tables", JSONObject()).put("preferences", JSONObject())
+                .toString().toByteArray(Charsets.UTF_8)
+            val digest = MessageDigest.getInstance("SHA-256").digest(data)
+                .joinToString("") { "%02x".format(it.toInt() and 0xff) }
+            val manifest = JSONObject().put("format", "acronix-backup").put("version", 2)
+                .put("dbVersion", 34).put("entries", JSONObject()
+                    .put("data.json", JSONObject().put("size", data.size).put("sha256", digest)))
+            java.util.zip.ZipOutputStream(file.outputStream()).use { zip ->
+                zip.putNextEntry(java.util.zip.ZipEntry("data.json"))
+                zip.write(data)
+                zip.closeEntry()
+                zip.putNextEntry(java.util.zip.ZipEntry("manifest.json"))
+                zip.write(manifest.toString().toByteArray(Charsets.UTF_8))
+                zip.closeEntry()
+            }
+            // ZIP and SHA-256 are valid; the required database tables are absent.
+            assertThrows(IllegalArgumentException::class.java) {
+                runBlocking { AcronixBackup.inspect(context, android.net.Uri.fromFile(file)) }
+            }
+        } finally { file.delete() }
+    }
+
     @Test fun safExportTruncatesOldDocumentAndVerifiesWrittenBytes() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val file = java.io.File.createTempFile("acronix-export-destination", ".zip", context.cacheDir)
