@@ -61,6 +61,50 @@ object AcronixBackup {
                 expected["manifest.json"] = BackupArchiveIntegrity.Entry(bytes.size.toLong(), sha256(bytes))
             }
             BackupArchiveIntegrity.verifyFile(file, expected, MAX_FILE, MAX_BYTES, 4096)
+            // Valid hashes alone do not make a backup usable: an attacker (or a
+            // faulty producer) can hash a malformed data.json and still pass ZIP
+            // integrity checks. Validate the expected, bounded v2 structure too.
+            java.util.zip.ZipFile(file).use { zip ->
+                val dataEntry = requireNotNull(zip.getEntry(DATA_ENTRY))
+                val dataBuffer = java.io.ByteArrayOutputStream()
+                zip.getInputStream(dataEntry).use { copyLimited(it, dataBuffer, MAX_FILE) }
+                val dataText = dataBuffer.toString(Charsets.UTF_8.name())
+                BackupJsonLimits.checkNesting(dataText)
+                val data = JSONObject(dataText)
+                require(data.getString("format") == "acronix-backup" &&
+                    data.getInt("version") == 2 && data.getInt("dbVersion") == 34) {
+                    "Unsupported backup payload"
+                }
+                val savedTables = data.getJSONObject("tables")
+                require(savedTables.length() == tables.size) { "Incomplete backup tables" }
+                for (table in tables) {
+                    val rows = savedTables.getJSONArray(table)
+                    require(rows.length() <= 100_000) { "Too many saved rows" }
+                    for (index in 0 until rows.length()) rows.getJSONObject(index)
+                }
+                val savedPreferences = data.getJSONObject("preferences")
+                require(savedPreferences.length() <= BackupPreferencePolicy.files.size)
+                for (name in savedPreferences.keys()) {
+                    require(name in BackupPreferencePolicy.files) { "Unknown preference file" }
+                    val values = savedPreferences.getJSONObject(name)
+                    for (key in values.keys()) {
+                        require(BackupPreferencePolicy.allows(name, key)) { "Unexpected preference key" }
+                        val item = values.getJSONObject(key)
+                        when (item.getString("type")) {
+                            "string" -> item.getString("value")
+                            "boolean" -> item.getBoolean("value")
+                            "int" -> item.getInt("value")
+                            "long" -> item.getLong("value")
+                            "float" -> item.getDouble("value")
+                            "set" -> {
+                                val entries = item.getJSONArray("value")
+                                for (index in 0 until entries.length()) entries.getString(index)
+                            }
+                            else -> error("Unexpected preference type")
+                        }
+                    }
+                }
+            }
             Inspection(expected.size - 1)
         } finally { file.delete() }
     }
