@@ -291,7 +291,8 @@ fun HomeScreen(
             }
         }) {
         val availableHeight = (maxHeight - bottomInset).coerceAtLeast(0.dp)
-        val maximumTop = (availableHeight - 56.dp).coerceAtLeast(minimumTop)
+        val maximumTop = com.galaxyrio.gracelauncher.ui.components.compactHomeMaximumTop(
+            availableHeight, minimumTop, maxWidth, maxHeight)
         val resolvedTop = (topSpace + topOffset.dp).coerceIn(minimumTop, maximumTop)
         val baselineOffset = homeLayout.baselineOffsetDp ?: capturedBaseline
         val baselineTop = (topSpace + topOffset.dp + (baselineOffset ?: 0f).dp).coerceIn(minimumTop, maximumTop)
