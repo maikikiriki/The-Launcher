@@ -92,24 +92,8 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Compilar variante completa opcional (permisos explicitos)
-        run: ./gradlew :app:assembleFullDebug --stacktrace --no-daemon
-
-      - name: Verificar manifiesto y firma de variante completa
-        shell: bash
-        run: |
-          set -euo pipefail
-          FULL="app/build/outputs/apk/fullDebug/app-fullDebug.apk"
-          "$ANDROID_HOME/build-tools/36.1.0/apksigner" verify --verbose "$FULL"
-          "$ANDROID_HOME/build-tools/36.1.0/aapt" dump xmltree "$FULL" AndroidManifest.xml > full-manifest.txt
-          grep -q BIND_ACCESSIBILITY_SERVICE full-manifest.txt || { echo "::error::Falta el servicio de accesibilidad"; exit 1; }
-          grep -q BIND_NOTIFICATION_LISTENER_SERVICE full-manifest.txt || { echo "::error::Falta el servicio de notificaciones"; exit 1; }
-
-      - name: Guardar APK con accesibilidad y notificaciones
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: Acronix-Launcher-test-${{ github.sha }}-completo
-          path: app/build/outputs/apk/fullDebug/app-fullDebug.apk
-          if-no-files-found: error
-          retention-days: 30
+      # No publicar la variante completa de forma automática: declara servicios
+      # de accesibilidad y escucha de notificaciones. Google Play Protect puede
+      # bloquear correctamente instalaciones desde archivos descargados.
+      # La variante completa requiere revisión de permisos y distribución
+      # autorizada, no un APK sideload ofrecido junto a la versión estándar.
