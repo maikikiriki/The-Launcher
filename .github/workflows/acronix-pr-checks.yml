@@ -38,6 +38,10 @@ jobs:
         run: python3 -m unittest discover -s scripts/tests -v
       - name: Ejecutar pruebas unitarias y compilar variante estandar
         run: bash gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleDebugAndroidTest --stacktrace --no-daemon
+      # Compile the future owner-signed variant without any private key.
+      # This never uploads an unsigned release APK.
+      - name: Verificar compilacion de la variante firmada (sin distribuir)
+        run: bash gradlew :app:assemblePreviewRelease --stacktrace --no-daemon
       - name: Resumir resultados unitarios sin datos de los casos
         if: always()
         run: python3 scripts/summarize_tests.py --root app/build/test-results/testDebugUnitTest --output app/build/acronix-reports/unit-summary.json
