@@ -92,6 +92,32 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Compilar APK paralelo sin sobrescribir Acronix instalado
+        run: ./gradlew :app:assemblePreviewDebug --stacktrace --no-daemon
+
+      - name: Verificar paquete aislado y firma
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="app/build/outputs/apk/previewDebug/app-previewDebug.apk"
+          AAPT="$ANDROID_HOME/build-tools/36.1.0/aapt"
+          "$AAPT" dump badging "$APK" | tee preview-badging.txt
+          grep -Fq "package: name='com.acronix.launcher.preview'" preview-badging.txt
+          "$ANDROID_HOME/build-tools/36.1.0/apksigner" verify --verbose "$APK"
+          "$AAPT" dump xmltree "$APK" AndroidManifest.xml > preview-manifest.txt
+          if grep -E 'BIND_ACCESSIBILITY_SERVICE|BIND_NOTIFICATION_LISTENER_SERVICE' preview-manifest.txt; then
+            echo "::error::La APK preview declara servicios sensibles"
+            exit 1
+          fi
+
+      - name: Guardar APK Acronix paralelo para probar sin perder datos
+        uses: actions/upload-artifact@v4
+        with:
+          name: Acronix-Launcher-preview-independiente-${{ github.sha }}
+          path: app/build/outputs/apk/previewDebug/app-previewDebug.apk
+          if-no-files-found: error
+          retention-days: 30
+
       # No publicar la variante completa de forma automática: declara servicios
       # de accesibilidad y escucha de notificaciones. Google Play Protect puede
       # bloquear correctamente instalaciones desde archivos descargados.
