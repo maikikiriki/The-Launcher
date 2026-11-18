@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Owner-signed preview remains the same restricted-permission product. -->
+    <application>
+        <service android:name="com.galaxyrio.gracelauncher.platform.GraceAccessibilityService"
+            tools:node="remove" />
+        <service android:name="com.galaxyrio.gracelauncher.data.media.MediaNotificationListener"
+            tools:node="remove" />
+    </application>
+</manifest>
