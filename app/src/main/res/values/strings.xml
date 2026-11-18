@@ -1223,7 +1223,7 @@
     <string name="acronix_backup_import">Import backup</string>
     <string name="acronix_backup_restore_disabled">Import is temporarily unavailable while recovery and integrity checks are being verified. Exported backups cannot currently be restored.</string>
     <string name="acronix_backup_share">Share backup</string>
-    <string name="acronix_backup_saved">Backup exported successfully.</string>
+    <string name="acronix_backup_saved">Export verified. Restoration is not available yet; this archive is not a guaranteed recovery point.</string>
     <string name="acronix_backup_restored">Backup imported. Close and reopen Acronix to refresh all views. Some widgets may need new authorization.</string>
     <string name="acronix_backup_error">Backup failed</string>
     <string name="acronix_backup_busy">Processing backup…</string>
@@ -1282,5 +1282,5 @@
     <string name="fold_copy">Copy</string>
     <string name="fold_undo">Undo last placement change</string>
     <string name="acronix_backup_check">Check backup</string>
-    <string name="acronix_backup_checked">Archive structure and payload hashes checked. This does not authenticate its author or guarantee safe restoration.</string>
+    <string name="acronix_backup_checked">ZIP, payload schema and hashes verified. This does not authenticate the source or guarantee safe restoration.</string>
 </resources>
