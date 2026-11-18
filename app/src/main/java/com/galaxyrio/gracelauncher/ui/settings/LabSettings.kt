@@ -74,9 +74,21 @@ internal fun AdvancedSettings(uiState: LauncherUiState, actions: LauncherActions
 
 @Composable
 internal fun LabAccessibilitySettings(uiState: LauncherUiState, actions: LauncherActions, onBack: () -> Unit) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val accessibilityDeclared = remember(context) {
+        runCatching {
+            context.packageManager.getServiceInfo(android.content.ComponentName(context,
+                "com.galaxyrio.gracelauncher.platform.GraceAccessibilityService"), 0)
+        }.isSuccess
+    }
     SettingsScaffold(stringResource(R.string.lab_accessibility), "lab_accessibility", onBack) { padding ->
         SettingsList(padding) {
             item { Spacer(Modifier.height(24.dp)) }
+            if (!accessibilityDeclared) item(key = "accessibility_not_in_standard_apk") {
+                Text(stringResource(R.string.acronix_accessibility_standard_unavailable),
+                    Modifier.padding(horizontal = 20.dp, vertical = 12.dp).testTag("accessibility_not_in_standard_apk"),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             item {
                 SettingsToggleItem(stringResource(R.string.lab_prefer_non_accessibility),
                     stringResource(R.string.lab_prefer_non_accessibility_summary), uiState.settings.preferNonAccessibility,
