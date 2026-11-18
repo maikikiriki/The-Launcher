@@ -57,7 +57,10 @@ android {
         }
         create("previewRelease") {
             initWith(getByName("release"))
-            applicationIdSuffix = ".preview"
+            // Owner key cannot update previously installed, differently signed
+            // .preview builds. A separate package is the only non-destructive
+            // installation path until explicit migration is proven.
+            applicationIdSuffix = ".signed"
             versionNameSuffix = "-owner-preview"
             // Without owner-controlled credentials the result is deliberately
             // UNSIGNED and the manual workflow rejects it during verification.
