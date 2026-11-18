@@ -1185,7 +1185,7 @@
     <string name="acronix_backup_import">Importar copia</string>
     <string name="acronix_backup_restore_disabled">La importación está temporalmente desactivada mientras se verifican la recuperación y la integridad. Por ahora no se pueden restaurar las copias exportadas.</string>
     <string name="acronix_backup_share">Compartir copia</string>
-    <string name="acronix_backup_saved">Copia exportada correctamente.</string>
+    <string name="acronix_backup_saved">Exportación verificada. Todavía no se puede restaurar: no es un punto de recuperación garantizado.</string>
     <string name="acronix_backup_restored">Copia importada. Cierra y vuelve a abrir Acronix para actualizar la pantalla. Algunos widgets necesitarán autorización.</string>
     <string name="acronix_backup_error">Error en la copia</string>
     <string name="acronix_backup_busy">Procesando copia…</string>
@@ -1244,5 +1244,5 @@
     <string name="fold_copy">Copiar</string>
     <string name="fold_undo">Deshacer último cambio de posición</string>
     <string name="acronix_backup_check">Comprobar copia</string>
-    <string name="acronix_backup_checked">Estructura y hashes de los archivos comprobados. Esto no autentica su autor ni garantiza una restauración segura.</string>
+    <string name="acronix_backup_checked">ZIP, estructura de datos y hashes verificados. Esto no autentica el origen ni garantiza una restauración segura.</string>
 </resources>
