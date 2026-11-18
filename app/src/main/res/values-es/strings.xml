@@ -1179,6 +1179,14 @@
     <string name="acronix_migration_applied">Configuración aplicada. Revisa la apariencia y autoriza los permisos necesarios en Android.</string>
 
     <string name="acronix_accessibility_standard_unavailable">Esta versión estándar de prueba no incluye el servicio de accesibilidad. El ajuste siguiente no lo habilita. Android mantiene limitadas las funciones protegidas; no desactives Play Protect para instalar otra variante.</string>
+    <string name="acronix_checkpoint_explanation">Puntos de recuperación privados y verificados: máximo tres. No están cifrados y solo se guardan en esta instalación. La exportación aún no es totalmente transaccional y la restauración seguirá desactivada hasta comprobar la recuperación segura.</string>
+    <string name="acronix_checkpoint_create">Crear punto de recuperación privado</string>
+    <string name="acronix_checkpoint_created">Nuevo punto de recuperación privado verificado.</string>
+    <string name="acronix_checkpoint_item">Punto de recuperación: %1$s</string>
+    <string name="acronix_checkpoint_empty">Todavía no hay puntos de recuperación privados.</string>
+    <string name="acronix_checkpoint_verify">Comprobar este punto de recuperación</string>
+    <string name="acronix_checkpoint_verified">Estructura e integridad del punto verificadas. La restauración no está activada.</string>
+    <string name="acronix_checkpoint_invalid">La comprobación del punto de recuperación ha fallado. No se han modificado tus datos.</string>
     <string name="acronix_backup_title">Copias de seguridad y transferencia</string>
     <string name="acronix_backup_summary">Importar, exportar o compartir la configuración, favoritos, carpetas, iconos y fuentes locales de Acronix.</string>
     <string name="acronix_backup_warning">Las copias pueden contener datos personales y no están cifradas. Guárdalas en un lugar privado. Son copias de Acronix: no pueden leer automáticamente los datos de Grace original. Algunos widgets necesitarán volver a autorizarse tras la restauración.</string>
