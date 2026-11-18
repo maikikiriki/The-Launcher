@@ -1176,7 +1176,8 @@ internal fun LauncherScreen(
         val homeTop = statusBarHeight + regularHomeTop
         val drawerTop = statusBarHeight + safeHeight * 0.28f
         val alphabet = uiState.settings.listAppearance.alphabet.normalized()
-        val railLayout = alphabet.layout(maxHeight.value, model.letters.size + 1)
+        val railLayout = alphabet.layoutInSafeArea(maxHeight.value, statusBarHeight.value,
+            bottomInset.value, model.letters.size + 1)
 
         CompositionLocalProvider(LocalHomeAnimationTarget provides true) {
           HorizontalPager(
