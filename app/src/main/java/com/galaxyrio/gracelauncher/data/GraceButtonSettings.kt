@@ -44,8 +44,8 @@ data class GraceButtonSettings(
     val swipeRight: GraceButtonTarget = GraceButtonTarget(GraceButtonAction.Search, enabled = false),
     val alphabetDoubleTap: GraceButtonTarget = GraceButtonTarget(GraceButtonAction.LockScreen, enabled = false),
     val animationsEnabled: Boolean = true,
-    val searchAnimationDurationMs: Int = 500,
-    val appListAnimationDurationMs: Int = 500,
+    val searchAnimationDurationMs: Int = 300,
+    val appListAnimationDurationMs: Int = 300,
     /** 100 keeps the normal distance and velocity thresholds. Higher is easier. */
     val swipeSensitivity: Int = 100,
     /** Home boundary pulls can require deliberate distance rather than fling velocity. */
