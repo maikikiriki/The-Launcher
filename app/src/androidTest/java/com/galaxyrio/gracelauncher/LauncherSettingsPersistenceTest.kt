@@ -61,21 +61,7 @@ class LauncherSettingsPersistenceTest {
     private fun openRepository(): LauncherSettingsRepository {
         database?.close()
         val reopened = Room.databaseBuilder(context, LauncherDatabase::class.java, databaseName)
-            .addMigrations(LauncherDatabase.Migration1To2, LauncherDatabase.Migration2To3,
-                LauncherDatabase.Migration3To4, LauncherDatabase.Migration4To5, LauncherDatabase.Migration5To6,
-                LauncherDatabase.Migration6To7, LauncherDatabase.Migration7To8, LauncherDatabase.Migration8To9,
-                LauncherDatabase.Migration9To10, LauncherDatabase.Migration10To11, LauncherDatabase.Migration11To12,
-                LauncherDatabase.Migration12To13, LauncherDatabase.Migration13To14,
-                LauncherDatabase.Migration14To15, LauncherDatabase.Migration15To16,
-                LauncherDatabase.Migration16To17, LauncherDatabase.Migration17To18,
-                LauncherDatabase.Migration18To19, LauncherDatabase.Migration19To20,
-                LauncherDatabase.Migration20To21, LauncherDatabase.Migration21To22,
-                LauncherDatabase.Migration22To23, LauncherDatabase.Migration23To24,
-                LauncherDatabase.Migration24To25, LauncherDatabase.Migration25To26,
-                LauncherDatabase.Migration26To27, LauncherDatabase.Migration27To28,
-                LauncherDatabase.Migration28To29, LauncherDatabase.Migration29To30,
-                LauncherDatabase.Migration30To31, LauncherDatabase.Migration31To32,
-                LauncherDatabase.Migration32To33).build()
+            .addMigrations(*LauncherDatabase.migrations).build()
         database = reopened
         return LauncherSettingsRepository(reopened)
     }

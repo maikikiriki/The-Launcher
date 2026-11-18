@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- The isolated preview must never request sideload-blocked accessibility
+         or notification-listener services. Keep identical policy to debug. -->
+    <application>
+        <service
+            android:name="com.galaxyrio.gracelauncher.platform.GraceAccessibilityService"
+            tools:node="remove" />
+        <service
+            android:name="com.galaxyrio.gracelauncher.data.media.MediaNotificationListener"
+            tools:node="remove" />
+    </application>
+</manifest>

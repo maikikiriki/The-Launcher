@@ -169,7 +169,9 @@ fun LauncherRoute(
     onCloseSettings: () -> Unit = {},
     widgetEditRequest: Int = 0,
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val rawUiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val foldHome = com.galaxyrio.gracelauncher.ui.settings.foldPresentation(rawUiState.settings.homeLayout)
+    val uiState = rawUiState.copy(settings = rawUiState.settings.copy(homeLayout = foldHome))
     val context = LocalContext.current
     val chooseAppStoreTitle = stringResource(R.string.choose_app_store)
     val launchView = LocalView.current
@@ -1174,7 +1176,8 @@ internal fun LauncherScreen(
         val homeTop = statusBarHeight + regularHomeTop
         val drawerTop = statusBarHeight + safeHeight * 0.28f
         val alphabet = uiState.settings.listAppearance.alphabet.normalized()
-        val railLayout = alphabet.layout(maxHeight.value, model.letters.size + 1)
+        val railLayout = alphabet.layoutInSafeArea(maxHeight.value, statusBarHeight.value,
+            bottomInset.value, model.letters.size + 1)
 
         CompositionLocalProvider(LocalHomeAnimationTarget provides true) {
           HorizontalPager(

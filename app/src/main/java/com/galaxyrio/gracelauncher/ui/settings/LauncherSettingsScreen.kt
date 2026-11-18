@@ -84,7 +84,7 @@ internal enum class SettingsPage {
     GraceButtonAppearance, GraceButtonPosition, AgendaAppearance, SearchAppearance, MediaPlayerAppearance,
     WidgetScreen, WidgetScreenEditor, Homepage, AppList, FeedScreen, StatusScreen, DigitalWellbeing, TabletsFoldables,
     Wallpaper, WallpaperDesigner,
-    AppCategories, CategoryEditor, TasksOrg, TaskLists, AcronixMigration, AcronixBackup,
+    AppCategories, CategoryEditor, TasksOrg, TaskLists, AcronixMigration, AcronixBackup, AcronixDiagnostics, AcronixFold,
 }
 
 /** The window's existing system-bar owner follows the active settings surface. */
@@ -217,7 +217,9 @@ fun LauncherSettingsScreen(
                 if (!storage.canEdit) {
                     SettingsScaffold(stringResource(R.string.settings_title), "settings_storage_blocked", back) { }
                 } else when (page) {
+                    SettingsPage.AcronixFold -> AcronixFoldSettings(uiState.settings.homeLayout, back)
                     SettingsPage.AcronixBackup -> AcronixBackupSettings(back)
+                    SettingsPage.AcronixDiagnostics -> AcronixDiagnosticsSettings(back)
                     SettingsPage.AcronixMigration -> GraceVideoMigrationSettings(uiState, actions, back)
                     SettingsPage.Root -> SettingsHome(uiState.isDefaultHome, actions.requestDefaultHome,
                         onOpenHome = { if (isCurrent()) actions.openHome() }, onBack = back, navigate = navigate)
@@ -417,14 +419,18 @@ private fun SettingsHome(
     val showDefaultHomeBanner = isDefaultHome == false
     val languageTag by rememberAppLanguage()
     val categories = buildList {
-        add(SettingsPage.AcronixMigration to LauncherSymbol.Settings)
+        // Backup and Fold diagnostics must be visible without hunting through
+        // the root list; the previous ordering made backup look unavailable.
         add(SettingsPage.AcronixBackup to LauncherSymbol.Settings)
+        add(SettingsPage.AcronixFold to LauncherSymbol.Settings)
+        add(SettingsPage.AcronixDiagnostics to LauncherSymbol.Settings)
         add(SettingsPage.Productivity to LauncherSymbol.Star)
         add(SettingsPage.Themes to LauncherSymbol.Palette)
         add(SettingsPage.Advanced to LauncherSymbol.Settings)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             add(SettingsPage.Language to LauncherSymbol.Language)
         }
+        add(SettingsPage.AcronixMigration to LauncherSymbol.Settings)
         add(SettingsPage.About to LauncherSymbol.Info)
     }
     SettingsScaffold(stringResource(R.string.settings_title), "settings_root", onBack) { padding ->
@@ -437,7 +443,9 @@ private fun SettingsHome(
             categories.forEachIndexed { index, (page, symbol) ->
                 item(key = page.name) {
                     val title = when (page) {
+                        SettingsPage.AcronixFold -> R.string.acronix_fold_title
                         SettingsPage.AcronixBackup -> R.string.acronix_backup_title
+                         SettingsPage.AcronixDiagnostics -> R.string.acronix_diag_title
                         SettingsPage.AcronixMigration -> R.string.acronix_migration_title
                         SettingsPage.Productivity -> R.string.settings_productivity
                         SettingsPage.Themes -> R.string.settings_themes
@@ -446,7 +454,9 @@ private fun SettingsHome(
                         else -> R.string.settings_about
                     }
                     val summary = when (page) {
+                        SettingsPage.AcronixFold -> stringResource(R.string.acronix_fold_summary)
                         SettingsPage.AcronixBackup -> stringResource(R.string.acronix_backup_summary)
+                         SettingsPage.AcronixDiagnostics -> stringResource(R.string.acronix_diag_intro)
                         SettingsPage.AcronixMigration -> stringResource(R.string.acronix_migration_summary)
                         SettingsPage.Productivity -> stringResource(R.string.settings_productivity_summary)
                         SettingsPage.Themes -> stringResource(R.string.settings_themes_summary)

@@ -7,6 +7,21 @@ plugins {
 }
 
 android {
+    // Only an explicitly provisioned owner-controlled key may sign release builds.
+    // PR builds receive none of these environment variables.
+    val stableSigning = listOf("ACRONIX_KEYSTORE_FILE", "ACRONIX_KEYSTORE_PASSWORD",
+        "ACRONIX_KEY_ALIAS", "ACRONIX_KEY_PASSWORD").map { providers.environmentVariable(it).orNull }
+    require(stableSigning.all { it == null } || stableSigning.all { !it.isNullOrBlank() }) {
+        "Incomplete Acronix release signing configuration"
+    }
+    if (stableSigning.all { !it.isNullOrBlank() }) {
+        signingConfigs.create("stable") {
+            storeFile = file(stableSigning[0]!!)
+            storePassword = stableSigning[1]
+            keyAlias = stableSigning[2]
+            keyPassword = stableSigning[3]
+        }
+    }
     namespace = "com.galaxyrio.gracelauncher"
     compileSdk = 37
     buildToolsVersion = "36.1.0"
@@ -15,7 +30,11 @@ android {
         applicationId = "com.acronix.launcher"
         minSdk = 28
         targetSdk = 37
-        versionCode = 4
+        // Owner-signed builds use a strictly increasing CI run number.
+        // Local/debug builds keep their existing code for compatibility with
+        // the only installable testing packages; no automatic signing migration.
+        versionCode = providers.environmentVariable("ACRONIX_BUILD_VERSION_CODE").orNull
+            ?.toIntOrNull()?.also { require(it >= 5) } ?: 4
         versionName = "0.1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -23,10 +42,32 @@ android {
 
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("stable")
             optimization {
                 enable = true
             }
         }
+        create("previewDebug") {
+            initWith(getByName("debug"))
+            // Safe isolated installation alongside existing Acronix installs.
+            // Do not change the original applicationId or remove its data.
+            applicationIdSuffix = ".preview"
+            versionNameSuffix = "-preview"
+            matchingFallbacks += listOf("debug")
+        }
+        create("previewRelease") {
+            initWith(getByName("release"))
+            // Owner key cannot update previously installed, differently signed
+            // .preview builds. A separate package is the only non-destructive
+            // installation path until explicit migration is proven.
+            applicationIdSuffix = ".signed"
+            versionNameSuffix = "-owner-preview"
+            // Without owner-controlled credentials the result is deliberately
+            // UNSIGNED and the manual workflow rejects it during verification.
+            signingConfig = signingConfigs.findByName("stable")
+            matchingFallbacks += listOf("release")
+        }
+
         create("fullDebug") {
             initWith(getByName("debug"))
             matchingFallbacks += listOf("debug")
@@ -64,6 +105,7 @@ room {
 }
 
 dependencies {
+    implementation("androidx.window:window:1.5.1")
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.animation)

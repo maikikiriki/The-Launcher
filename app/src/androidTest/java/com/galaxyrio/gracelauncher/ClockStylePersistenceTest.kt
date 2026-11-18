@@ -35,7 +35,7 @@ class ClockStylePersistenceTest {
             regionOrder = listOf(ClockRegion.Tertiary, ClockRegion.Primary, ClockRegion.Secondary),
             rotateAll = true,
         )
-        val original = ClockStyle(regions = regions,
+        val original = ClockStyle(regions = regions.normalized(),
             colors = mapOf(ClockColorPart.Weather to IconColor(0, fontColorId = FontColors.WallpaperId)))
         val encoded = original.encode()
         assertTrue(JSONObject(encoded).getJSONObject("regions").isNull("primary"))
@@ -87,7 +87,7 @@ class ClockStylePersistenceTest {
         assertEquals(ClockLayout.TwoLines, restored.layout)
         assertEquals(ClockElement.Date, regions.primary)
         assertEquals(ClockAlignment.Left, regions.primaryAlignment)
-        assertEquals(listOf(ClockRegion.Tertiary, ClockRegion.Primary, ClockRegion.Secondary), regions.regionOrder)
+        assertEquals(listOf(ClockRegion.Tertiary, ClockRegion.Primary, ClockRegion.Secondary, ClockRegion.Agenda, ClockRegion.Task), regions.regionOrder)
         assertEquals(listOf(ClockElement.Weather, null, ClockElement.Clock, ClockElement.Weekday,
             ClockElement.Date, ClockElement.Battery), regions.secondary.order)
         assertEquals(setOf(ClockElement.Clock, ClockElement.Weather), regions.secondary.selected)

@@ -90,6 +90,28 @@ class AlphabetAppearanceTest {
         assertEquals(0f, value.layout(800f, 0).heightDp, 0f)
     }
 
+    @Test fun outerFoldLandscapeRailStaysInsideBothSystemBars() {
+        val windowHeight = 345f
+        val statusBar = 26f
+        val navigationBar = 24f
+        val rail = AlphabetAppearance().layoutInSafeArea(windowHeight, statusBar, navigationBar, 27)
+        assertTrue(rail.topDp >= statusBar)
+        assertTrue(rail.heightDp > 0f)
+        assertTrue(rail.topDp + rail.heightDp <= windowHeight - navigationBar)
+        assertEquals(statusBar + (windowHeight - statusBar - navigationBar) * .85f,
+            rail.topDp + rail.heightDp, .01f)
+    }
+
+    @Test fun insetChangesKeepAlphabetInsideCompactWindowsWithoutNaN() {
+        val alphabet = AlphabetAppearance(topPercent = 35, bottomPercent = 100)
+        for (height in listOf(180f, 270f, 350f, 800f)) {
+            val rail = alphabet.layoutInSafeArea(height, 35f, 30f, 27)
+            assertTrue(rail.topDp >= 35f)
+            assertTrue(rail.heightDp >= 0f)
+            assertTrue(rail.topDp + rail.heightDp <= height - 30f + .01f)
+        }
+    }
+
     @Test fun invalidSizesAndShapeParametersAreSanitized() {
         val value = AlphabetAppearance(fontSize = 90, pebbleRoundness = -10, squareCornerRadius = 300, cookieSides = 99).normalized()
         assertEquals(28, value.fontSize)

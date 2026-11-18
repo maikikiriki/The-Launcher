@@ -19,6 +19,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import com.galaxyrio.gracelauncher.R
 import com.galaxyrio.gracelauncher.data.AcronixBackup
+import com.galaxyrio.gracelauncher.data.AcronixRecoveryPoints
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
@@ -39,11 +42,23 @@ internal fun AcronixBackupSettings(onBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var busy by remember { mutableStateOf(false) }
+    var pointsRevision by remember { mutableIntStateOf(0) }
+    var points by remember { mutableStateOf<List<AcronixRecoveryPoints.Point>>(emptyList()) }
     var status by remember { mutableStateOf<String?>(null) }
     var pendingRestore by remember { mutableStateOf<Uri?>(null) }
     val saved = stringResource(R.string.acronix_backup_saved)
     val restored = stringResource(R.string.acronix_backup_restored)
     val errorText = stringResource(R.string.acronix_backup_error)
+    val checkpointSaved = stringResource(R.string.acronix_checkpoint_created)
+    val checkpointValid = stringResource(R.string.acronix_checkpoint_verified)
+    val checkpointInvalid = stringResource(R.string.acronix_checkpoint_invalid)
+    LaunchedEffect(pointsRevision) {
+        try { points = AcronixRecoveryPoints.list(context) }
+        catch (error: Exception) {
+            if (error is CancellationException) throw error
+            status = "$errorText: ${error.message.orEmpty().take(160)}"
+        }
+    }
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri != null && !busy) scope.launch {
             busy = true
@@ -59,6 +74,19 @@ internal fun AcronixBackupSettings(onBack: () -> Unit) {
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null && !busy) pendingRestore = uri
     }
+    val checkedText = stringResource(R.string.acronix_backup_checked)
+    val inspector = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null && !busy) scope.launch {
+            busy = true
+            try {
+                AcronixBackup.inspect(context, uri)
+                status = checkedText
+            } catch (error: Exception) {
+                if (error is CancellationException) throw error
+                status = errorText
+            } finally { busy = false }
+        }
+    }
     SettingsScaffold(stringResource(R.string.acronix_backup_title), "acronix_backup", onBack) { padding: PaddingValues ->
         Column(Modifier.padding(padding).verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 24.dp),
@@ -66,6 +94,8 @@ internal fun AcronixBackupSettings(onBack: () -> Unit) {
             Text(stringResource(R.string.acronix_backup_summary), style = MaterialTheme.typography.bodyLarge)
             Text(stringResource(R.string.acronix_backup_warning),
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(stringResource(R.string.acronix_backup_restore_disabled),
+                color = MaterialTheme.colorScheme.error)
             Button(onClick = {
                 exporter.launch("Acronix-backup.zip")
             }, modifier = Modifier.fillMaxWidth(), enabled = !busy) {
@@ -73,7 +103,7 @@ internal fun AcronixBackupSettings(onBack: () -> Unit) {
             }
             Button(onClick = {
                 importer.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
-            }, modifier = Modifier.fillMaxWidth(), enabled = !busy) {
+            }, modifier = Modifier.fillMaxWidth(), enabled = false) {
                 Text(stringResource(R.string.acronix_backup_import))
             }
             Button(onClick = {
@@ -98,6 +128,49 @@ internal fun AcronixBackupSettings(onBack: () -> Unit) {
                 }
             }, modifier = Modifier.fillMaxWidth(), enabled = !busy) {
                 Text(stringResource(R.string.acronix_backup_share))
+            }
+            Button(onClick = { inspector.launch(arrayOf("application/zip", "application/octet-stream")) },
+                modifier = Modifier.fillMaxWidth(), enabled = !busy) {
+                Text(stringResource(R.string.acronix_backup_check))
+            }
+            Text(stringResource(R.string.acronix_checkpoint_explanation),
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Button(onClick = {
+                if (!busy) scope.launch {
+                    busy = true
+                    try {
+                        AcronixRecoveryPoints.create(context)
+                        pointsRevision++
+                        status = checkpointSaved
+                    } catch (error: Exception) {
+                        if (error is CancellationException) throw error
+                        status = "$errorText: ${error.message.orEmpty().take(160)}"
+                    } finally { busy = false }
+                }
+            }, modifier = Modifier.fillMaxWidth(), enabled = !busy) {
+                Text(stringResource(R.string.acronix_checkpoint_create))
+            }
+            if (points.isEmpty()) Text(stringResource(R.string.acronix_checkpoint_empty),
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            points.forEach { point ->
+                val timestamp = remember(point.createdAt) {
+                    java.text.DateFormat.getDateTimeInstance().format(java.util.Date(point.createdAt))
+                }
+                Text(stringResource(R.string.acronix_checkpoint_item, timestamp))
+                Button(onClick = {
+                    if (!busy) scope.launch {
+                        busy = true
+                        try {
+                            status = if (AcronixRecoveryPoints.verify(context, point))
+                                checkpointValid else checkpointInvalid
+                        } catch (error: Exception) {
+                            if (error is CancellationException) throw error
+                            status = checkpointInvalid
+                        } finally { busy = false }
+                    }
+                }, modifier = Modifier.fillMaxWidth(), enabled = !busy) {
+                    Text(stringResource(R.string.acronix_checkpoint_verify))
+                }
             }
             if (busy) Text(stringResource(R.string.acronix_backup_busy))
             status?.let { Text(it, color = MaterialTheme.colorScheme.primary) }

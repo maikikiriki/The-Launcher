@@ -8,19 +8,27 @@ class ClockRegionsTest {
     @Test fun regionOrderingKeepsFirstOccurrencesAndCompletesMissingRegions() {
         val regions = ClockRegions(regionOrder = listOf(ClockRegion.Tertiary, ClockRegion.Primary,
             ClockRegion.Tertiary)).normalized()
-        assertEquals(listOf(ClockRegion.Tertiary, ClockRegion.Primary, ClockRegion.Secondary), regions.regionOrder)
+        assertEquals(listOf(ClockRegion.Tertiary, ClockRegion.Primary, ClockRegion.Secondary,
+            ClockRegion.Agenda, ClockRegion.Task), regions.regionOrder)
         assertEquals(ClockRegion.entries, ClockRegions(regionOrder = emptyList()).normalized().regionOrder)
     }
 
     @Test fun legacyCalendarAboveClockMigratesOnlyBeforeExplicitRegionOrderExists() {
         val legacy = ClockStyle()
         val migrated = legacy.resolvedRegions(calendarAboveClock = true)
-        assertEquals(listOf(ClockRegion.Secondary, ClockRegion.Primary, ClockRegion.Tertiary), migrated.regionOrder)
+        assertEquals(listOf(ClockRegion.Secondary, ClockRegion.Primary, ClockRegion.Tertiary,
+            ClockRegion.Agenda, ClockRegion.Task), migrated.regionOrder)
         assertEquals(ClockRegion.entries, legacy.resolvedRegions().regionOrder)
         val saved = legacy.withRegions(migrated.copy(regionOrder = listOf(ClockRegion.Tertiary,
             ClockRegion.Primary, ClockRegion.Secondary)))
         assertEquals(saved.regions, saved.resolvedRegions(calendarAboveClock = false))
         assertEquals(saved.regions, saved.resolvedRegions(calendarAboveClock = true))
+    }
+
+    @Test fun missingTaskIsInsertedAfterMovedAgendaWithoutChangingSavedOrder() {
+        val order = listOf(ClockRegion.Agenda, ClockRegion.Tertiary, ClockRegion.Primary, ClockRegion.Secondary)
+        assertEquals(listOf(ClockRegion.Agenda, ClockRegion.Task, ClockRegion.Tertiary,
+            ClockRegion.Primary, ClockRegion.Secondary), ClockRegions(regionOrder = order).normalized().regionOrder)
     }
 
     @Test fun primarySelectionMustBeClearedBeforeMovingItsElementToAnotherRegion() {

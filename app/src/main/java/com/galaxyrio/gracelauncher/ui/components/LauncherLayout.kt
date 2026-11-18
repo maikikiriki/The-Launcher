@@ -57,6 +57,15 @@ internal object LauncherLayout {
     val TopFadeHeight = 56.dp
 }
 
+/**
+ * Retain enough space for actual home rows on short landscape cover windows.
+ * Existing portrait/tablet anchors and the saved position are untouched.
+ */
+internal fun compactHomeMaximumTop(availableHeight: Dp, minimumTop: Dp, width: Dp, height: Dp): Dp {
+    val reservedRows = if (width > height && height < 550.dp) 176.dp else 56.dp
+    return (availableHeight - reservedRows).coerceAtLeast(minimumTop)
+}
+
 /** Reserve one stable top safe area, whether the status bar is currently shown or not. */
 @Composable
 @OptIn(ExperimentalLayoutApi::class)

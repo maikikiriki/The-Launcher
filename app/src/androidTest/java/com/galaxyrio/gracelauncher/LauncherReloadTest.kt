@@ -27,6 +27,7 @@ class LauncherReloadTest {
     private val target get() = instrumentation.targetContext
     private val directory = File(target.cacheDir, "startup-cache-test-${System.nanoTime()}").apply { mkdirs() }
     private val context = object : ContextWrapper(target) {
+        override fun getApplicationContext(): android.content.Context = this
         override fun getNoBackupFilesDir() = directory
     }
     private val component = ComponentName("test.app", "Main")

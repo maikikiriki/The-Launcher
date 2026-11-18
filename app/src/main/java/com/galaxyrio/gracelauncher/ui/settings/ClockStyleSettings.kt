@@ -126,7 +126,10 @@ internal fun ClockStyleSettings(uiState: LauncherUiState, actions: LauncherActio
     var confirmExit by rememberSaveable { mutableStateOf(false) }
     var page by rememberSaveable { mutableStateOf(ClockEditorPage.Style) }
     // Expansion belongs to this editor visit, not the saved widget configuration.
-    var expandedGroups by remember { mutableStateOf(emptySet<String>()) }
+    var expandedGroups by rememberSaveable(
+        stateSaver = androidx.compose.runtime.saveable.listSaver<Set<String>, String>(
+            save = { it.toList() }, restore = { it.toSet() }),
+    ) { mutableStateOf(emptySet<String>()) }
     var presetLayout by rememberSaveable {
         mutableStateOf(uiState.settings.clockStyle.layout.takeIf {
             uiState.settings.clockStyle.regions == null && !it.allowsCustomFont

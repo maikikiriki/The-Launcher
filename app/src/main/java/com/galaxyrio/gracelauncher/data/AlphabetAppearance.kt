@@ -32,6 +32,24 @@ data class AlphabetAppearance(
             cookieSides = cookieSides.takeIf { it in IconDesign.CookieSides } ?: 4)
     }
 
+    /**
+     * Position the alphabet inside the usable viewport. On a rotated Fold cover
+     * screen, percentages of the full edge-to-edge height can put glyphs under
+     * the status/navigation areas while the home rows use safe drawing bounds.
+     */
+    internal fun layoutInSafeArea(
+        viewportHeightDp: Float,
+        topInsetDp: Float,
+        bottomInsetDp: Float,
+        entryCount: Int,
+    ): AlphabetRailLayout {
+        if (!viewportHeightDp.isFinite() || viewportHeightDp <= 0f) return AlphabetRailLayout(0f, 0f)
+        val top = topInsetDp.takeIf { it.isFinite() }?.coerceIn(0f, viewportHeightDp) ?: 0f
+        val bottom = bottomInsetDp.takeIf { it.isFinite() }?.coerceIn(0f, viewportHeightDp - top) ?: 0f
+        val rail = layout(viewportHeightDp - top - bottom, entryCount)
+        return rail.copy(topDp = top + rail.topDp)
+    }
+
     /** The caller includes the home and utility markers in entryCount. */
     internal fun layout(viewportHeightDp: Float, entryCount: Int): AlphabetRailLayout {
         if (!viewportHeightDp.isFinite() || viewportHeightDp <= 0f || entryCount <= 0) return AlphabetRailLayout(0f, 0f)

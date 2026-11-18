@@ -170,9 +170,42 @@ class ShortcutRepository(context: Context) : AutoCloseable {
         }
     }
 
-    fun launch(shortcut: LauncherShortcut, sourceBounds: Rect? = null, options: Bundle? = null): Boolean = runCatching {
-        launcherApps.startShortcut(shortcut.packageName, shortcut.id, sourceBounds, options, shortcut.user ?: user)
-    }.isSuccess
+    fun launch(shortcut: LauncherShortcut, sourceBounds: Rect? = null, options: Bundle? = null): Boolean {
+        val launched = runCatching {
+            launcherApps.startShortcut(shortcut.packageName, shortcut.id, sourceBounds, options, shortcut.user ?: user)
+        }.isSuccess
+        // Failed starts can be caused by browser updates invalidating a saved ID.
+        // Keep the user's placement, but never keep a stale provider query cached.
+        if (!launched) invalidate(shortcut.packageName)
+        return launched
+    }
+
+    /**
+     * Best-effort repair after an actual failed launch. Do Binder work off main.
+     * Never retarget to a different shortcut ID, app, or user/profile: doing so
+     * could open a different page or a personal app instead of the work copy.
+     * No background polling and no silent deletion of the pinned item.
+     */
+    suspend fun repairPinnedShortcut(shortcut: LauncherShortcut): Boolean = withContext(Dispatchers.IO) {
+        if (!hasAccess() || shortcut.isPrivateSpace) return@withContext false
+        val targetUser = shortcut.user ?: user
+        runCatching {
+            val candidates = launcherApps.getShortcuts(
+                LauncherApps.ShortcutQuery().setPackage(shortcut.packageName)
+                    .setQueryFlags(LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST or
+                        LauncherApps.ShortcutQuery.FLAG_MATCH_DYNAMIC or
+                        LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED),
+                targetUser,
+            ).orEmpty()
+            val current = candidates.firstOrNull { it.id == shortcut.id && it.isEnabled }
+                ?: return@runCatching false
+            if (!current.isPinned) pin(listOf(shortcut))
+            invalidate(shortcut.packageName)
+            // The provider must still expose this exact identity; the UI prompts
+            // the owner to re-pin manually when an ID has actually disappeared.
+            true
+        }.getOrDefault(false)
+    }
 
     /** Preserve dynamic shortcuts once the user adds them to a persistent surface. */
     suspend fun pin(shortcuts: List<LauncherShortcut>) = withContext(Dispatchers.IO) {

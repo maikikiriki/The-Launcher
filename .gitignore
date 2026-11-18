@@ -27,3 +27,6 @@ local.properties
 *.pfx
 keystore.properties
 signing.properties
+
+# Local Python verification helpers
+__pycache__/

@@ -28,6 +28,86 @@ import java.util.zip.ZipOutputStream
  * This format is only for Acronix itself, not direct access to Grace's sandbox.
  */
 object AcronixBackup {
+    data class Inspection(val payloadCount: Int)
+
+    /** Checks v2 archive structure and payload integrity, never applies configuration. */
+    suspend fun inspect(context: Context, uri: Uri): Inspection = withContext(Dispatchers.IO) {
+        val file = File.createTempFile("acronix_inspect_", ".zip", context.cacheDir)
+        try {
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                file.outputStream().use { copyLimited(input, it, MAX_BYTES + 4L * 1024 * 1024) }
+            } ?: error("Unable to read backup")
+            val expected = linkedMapOf<String, BackupArchiveIntegrity.Entry>()
+            java.util.zip.ZipFile(file).use { zip ->
+                val entry = requireNotNull(zip.getEntry("manifest.json")) { "Missing manifest" }
+                val buffer = java.io.ByteArrayOutputStream()
+                zip.getInputStream(entry).use { copyLimited(it, buffer, 1024L * 1024) }
+                val bytes = buffer.toByteArray()
+                val manifestText = String(bytes, Charsets.UTF_8)
+                BackupJsonLimits.checkNesting(manifestText)
+                val manifest = JSONObject(manifestText)
+                require(manifest.getString("format") == "acronix-backup" && manifest.getInt("version") == 2 &&
+                    manifest.getInt("dbVersion") == 34) { "Unsupported backup version" }
+                val entries = manifest.getJSONObject("entries")
+                require(entries.length() in 1..4095 && entries.has(DATA_ENTRY))
+                for (name in entries.keys()) {
+                    require(name == DATA_ENTRY || assetDirs.any { directory ->
+                        name.startsWith("files/$directory/") && safeFileName(name.substringAfterLast('/')) &&
+                            name == "files/$directory/${name.substringAfterLast('/')}"
+                    }) { "Unexpected backup resource" }
+                    val item = entries.getJSONObject(name)
+                    expected[name] = BackupArchiveIntegrity.Entry(item.getLong("size"), item.getString("sha256"))
+                }
+                expected["manifest.json"] = BackupArchiveIntegrity.Entry(bytes.size.toLong(), sha256(bytes))
+            }
+            BackupArchiveIntegrity.verifyFile(file, expected, MAX_FILE, MAX_BYTES, 4096)
+            // Valid hashes alone do not make a backup usable: an attacker (or a
+            // faulty producer) can hash a malformed data.json and still pass ZIP
+            // integrity checks. Validate the expected, bounded v2 structure too.
+            java.util.zip.ZipFile(file).use { zip ->
+                val dataEntry = requireNotNull(zip.getEntry(DATA_ENTRY))
+                val dataBuffer = java.io.ByteArrayOutputStream()
+                zip.getInputStream(dataEntry).use { copyLimited(it, dataBuffer, MAX_FILE) }
+                val dataText = dataBuffer.toString(Charsets.UTF_8.name())
+                BackupJsonLimits.checkNesting(dataText)
+                val data = JSONObject(dataText)
+                require(data.getString("format") == "acronix-backup" &&
+                    data.getInt("version") == 2 && data.getInt("dbVersion") == 34) {
+                    "Unsupported backup payload"
+                }
+                val savedTables = data.getJSONObject("tables")
+                require(savedTables.length() == tables.size) { "Incomplete backup tables" }
+                for (table in tables) {
+                    val rows = savedTables.getJSONArray(table)
+                    require(rows.length() <= 100_000) { "Too many saved rows" }
+                    for (index in 0 until rows.length()) rows.getJSONObject(index)
+                }
+                val savedPreferences = data.getJSONObject("preferences")
+                require(savedPreferences.length() <= BackupPreferencePolicy.files.size)
+                for (name in savedPreferences.keys()) {
+                    require(name in BackupPreferencePolicy.files) { "Unknown preference file" }
+                    val values = savedPreferences.getJSONObject(name)
+                    for (key in values.keys()) {
+                        require(BackupPreferencePolicy.allows(name, key)) { "Unexpected preference key" }
+                        val item = values.getJSONObject(key)
+                        when (item.getString("type")) {
+                            "string" -> item.getString("value")
+                            "boolean" -> item.getBoolean("value")
+                            "int" -> item.getInt("value")
+                            "long" -> item.getLong("value")
+                            "float" -> item.getDouble("value")
+                            "set" -> {
+                                val entries = item.getJSONArray("value")
+                                for (index in 0 until entries.length()) entries.getString(index)
+                            }
+                            else -> error("Unexpected preference type")
+                        }
+                    }
+                }
+            }
+            Inspection(expected.size - 1)
+        } finally { file.delete() }
+    }
     private const val VERSION = 1
     private const val MAX_BYTES = 128L * 1024L * 1024L
     private const val MAX_FILE = 24L * 1024L * 1024L
@@ -36,53 +116,110 @@ object AcronixBackup {
     private val assetDirs = listOf("clock_fonts", "item_icons")
     private const val DATA_ENTRY = "data.json"
 
+    /**
+     * Build and verify the archive privately before touching the SAF destination.
+     * If snapshot generation fails (for example, disk full or a changed asset),
+     * the user's existing document is not truncated. The provider itself is not
+     * transactional: a failed write can still leave a partial external document.
+     * Only report success after reading the written document back and validating it.
+     */
     suspend fun export(context: Context, uri: Uri) = withContext(Dispatchers.IO) {
-        context.contentResolver.openOutputStream(uri, "w")?.use { exportTo(context, it) }
-            ?: error("Unable to open destination")
-    }
-
-    suspend fun shareFile(context: Context): File = withContext(Dispatchers.IO) {
-        val dir = File(context.cacheDir, "acronix_shared").apply { mkdirs() }
-        dir.listFiles().orEmpty().forEach { it.delete() }
-        val output = File(dir, "Acronix-backup.zip")
-        try { output.outputStream().use { exportTo(context, it) }; output }
-        catch (error: Exception) { output.delete(); throw error }
-    }
-
-    private fun exportTo(context: Context, output: OutputStream) {
-        val db = LauncherDatabase.getInstance(context).openHelper.writableDatabase
-        val data = JSONObject()
-            .put("format", "acronix-backup")
-            .put("version", VERSION)
-            .put("dbVersion", 34)
-            .put("tables", exportTables(db))
-            .put("preferences", exportPreferences(context))
-        val bytes = data.toString().toByteArray(Charsets.UTF_8)
-        require(bytes.size.toLong() <= MAX_FILE)
-        val checksum = sha256(bytes)
-        val meta = JSONObject().put("format", "acronix-backup")
-            .put("version", VERSION).put("checksum", checksum)
-            .put("createdAt", System.currentTimeMillis())
-            .put("android", Build.VERSION.SDK_INT)
-        ZipOutputStream(output.buffered()).use { zip ->
-            fun add(name: String, source: InputStream) {
-                zip.putNextEntry(ZipEntry(name))
-                source.use { input -> copyLimited(input, zip, MAX_FILE) }
-                zip.closeEntry()
-            }
-            add("manifest.json", meta.toString().byteInputStream(Charsets.UTF_8))
-            add(DATA_ENTRY, bytes.inputStream())
-            for (directory in assetDirs) {
-                val dir = File(context.filesDir, directory)
-                dir.listFiles().orEmpty().filter { it.isFile && safeFileName(it.name) }.forEach { file ->
-                    if (file.length() <= MAX_FILE) add("files/$directory/${file.name}", file.inputStream())
-                }
-            }
+        val staged = File.createTempFile("acronix_export_staged_", ".zip", context.cacheDir)
+        try {
+            staged.outputStream().use { exportTo(context, it) }
+            context.contentResolver.openOutputStream(uri, "wt")?.use { destination ->
+                staged.inputStream().use { source -> source.copyTo(destination) }
+            } ?: error("Unable to open destination")
+            inspect(context, uri)
+        } finally {
+            staged.delete()
         }
     }
 
-    /** Validation occurs completely before any on-device state is replaced. */
-    suspend fun restore(context: Context, uri: Uri) = withContext(Dispatchers.IO) {
+    suspend fun shareFile(context: Context): File = withContext(Dispatchers.IO) {
+        val dir = File(context.cacheDir, "acronix_shared")
+        check(dir.isDirectory || dir.mkdirs()) { "Unable to prepare sharing directory" }
+        val output = File(dir, "Acronix-backup.zip")
+        // Never destroy the last verified share copy before a new snapshot is ready.
+        val staged = File.createTempFile("acronix_share_staged_", ".zip", dir)
+        try {
+            staged.outputStream().use { exportTo(context, it) }
+            inspect(context, Uri.fromFile(staged))
+            java.nio.file.Files.move(staged.toPath(), output.toPath(),
+                java.nio.file.StandardCopyOption.ATOMIC_MOVE,
+                java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            output
+        } finally {
+            staged.delete()
+        }
+    }
+
+    private fun exportTo(context: Context, output: OutputStream) {
+        // Database rows share a transaction. Preferences and assets are separate stores;
+        // this is not yet a globally atomic snapshot and restoration remains disabled.
+        val db = LauncherDatabase.getInstance(context).openHelper.writableDatabase
+        db.beginTransaction()
+        val rows = try {
+            exportTables(db).also { db.setTransactionSuccessful() }
+        } finally { db.endTransaction() }
+        val data = JSONObject().put("format", "acronix-backup").put("version", 2)
+            .put("dbVersion", 34).put("tables", rows)
+            .put("preferences", exportPreferences(context))
+        val archive = File.createTempFile("acronix_export_", ".zip", context.cacheDir)
+        try {
+            val expected = linkedMapOf<String, BackupArchiveIntegrity.Entry>()
+            var total = 0L
+            ZipOutputStream(archive.outputStream().buffered()).use { zip ->
+                fun add(name: String, source: InputStream) {
+                    require(expected.size < 4095) { "Too many backup files" }
+                    val digest = MessageDigest.getInstance("SHA-256")
+                    var size = 0L
+                    zip.putNextEntry(ZipEntry(name))
+                    source.use { input ->
+                        val buffer = ByteArray(8192)
+                        while (true) {
+                            val count = input.read(buffer)
+                            if (count < 0) break
+                            size += count; total += count
+                            require(size <= MAX_FILE && total <= MAX_BYTES) { "Backup exceeds size limit" }
+                            digest.update(buffer, 0, count)
+                            zip.write(buffer, 0, count)
+                        }
+                    }
+                    zip.closeEntry()
+                    expected[name] = BackupArchiveIntegrity.Entry(size, digest.digest()
+                        .joinToString("") { "%02x".format(it.toInt() and 0xff) })
+                }
+                add(DATA_ENTRY, data.toString().byteInputStream(Charsets.UTF_8))
+                for (directory in assetDirs) {
+                    File(context.filesDir, directory).listFiles().orEmpty()
+                        .filter { it.isFile && safeFileName(it.name) }.forEach { file ->
+                            // Fail instead of silently omitting an oversized resource.
+                            add("files/$directory/${file.name}", file.inputStream())
+                        }
+                }
+                val entries = JSONObject()
+                expected.forEach { (name, entry) -> entries.put(name,
+                    JSONObject().put("size", entry.size).put("sha256", entry.sha256)) }
+                val manifest = JSONObject().put("format", "acronix-backup").put("version", 2)
+                    .put("createdAt", System.currentTimeMillis()).put("android", Build.VERSION.SDK_INT)
+                    .put("dbVersion", 34).put("entries", entries)
+                add("manifest.json", manifest.toString().byteInputStream(Charsets.UTF_8))
+            }
+            BackupArchiveIntegrity.verifyFile(archive, expected, MAX_FILE, MAX_BYTES, 4096)
+            archive.inputStream().use { it.copyTo(output) }
+        } finally {
+            archive.delete()
+        }
+    }
+
+    /** Restoration is disabled until crash recovery and archive integrity are verified. */
+    suspend fun restore(context: Context, uri: Uri): Nothing {
+        throw IllegalStateException("Backup restoration is temporarily unavailable")
+    }
+
+    // Retained for audit only. This implementation is not safe against process death.
+    private suspend fun restoreUnverified(context: Context, uri: Uri) = withContext(Dispatchers.IO) {
         val staging = File(context.cacheDir, "acronix_restore_${UUID.randomUUID()}")
         check(staging.mkdirs())
         val oldFiles = File(staging, "_rollback")
@@ -252,12 +389,10 @@ object AcronixBackup {
     }
 
     private fun exportPreferences(context: Context): JSONObject = JSONObject().apply {
-        val directory = File(context.applicationInfo.dataDir, "shared_prefs")
-        directory.listFiles().orEmpty().filter { it.isFile && it.name.endsWith(".xml") }.forEach { file ->
-            val name = file.name.removeSuffix(".xml")
-            if (!name.matches(Regex("[A-Za-z0-9_.-]{1,100}"))) return@forEach
+        BackupPreferencePolicy.files.forEach { name ->
             val values = JSONObject()
             for ((key, value) in context.getSharedPreferences(name, Context.MODE_PRIVATE).all) {
+                if (!BackupPreferencePolicy.allows(name, key)) continue
                 val item = JSONObject()
                 when (value) {
                     is String -> item.put("type", "string").put("value", value)

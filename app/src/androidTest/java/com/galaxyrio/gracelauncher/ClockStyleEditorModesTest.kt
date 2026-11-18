@@ -51,14 +51,12 @@ class ClockStyleEditorModesTest {
 
     private fun tab(name: String) = compose.onNodeWithTag("clock_tab:$name").performClick()
 
-    private fun findControl(tag: String): SemanticsNodeInteraction {
-        compose.onNodeWithTag("clock_style_controls").performScrollToNode(hasTestTag(tag))
-        return compose.onNodeWithTag(tag)
-    }
+    private fun findControl(tag: String): SemanticsNodeInteraction =
+        clockEditorControl(tag, { compose.onNodeWithTag(it, useUnmergedTree = true) }, { compose.waitForIdle() })
 
     private fun findLayout(layout: ClockLayout): SemanticsNodeInteraction {
-        findControl("clock_layout_selector")
-        compose.onNodeWithTag("clock_layout_options", useUnmergedTree = true).performScrollToNode(hasTestTag("clock_layout:${layout.name}"))
+        // Presets are now direct cards in the page list, not a nested selector.
+        compose.onNodeWithTag("clock_style_controls").performScrollToNode(hasTestTag("clock_layout:${layout.name}"))
         return compose.onNodeWithTag("clock_layout:${layout.name}")
     }
 
@@ -82,7 +80,7 @@ class ClockStyleEditorModesTest {
         screenshot("clock-regions-primary.png")
         compose.onNodeWithTag("clock_tab:Style").assertIsSelected()
         compose.onNodeWithTag("clock_layout_selector").assertDoesNotExist()
-        ClockRegion.entries.forEach { region ->
+        listOf(ClockRegion.Primary, ClockRegion.Secondary, ClockRegion.Tertiary).forEach { region ->
             ClockElement.entries.forEach { element(region, it).assertExists() }
         }
 

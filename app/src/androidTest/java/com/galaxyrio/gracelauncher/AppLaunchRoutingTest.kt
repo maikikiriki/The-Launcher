@@ -11,7 +11,7 @@ import android.os.Process
 import android.os.UserHandle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.galaxyrio.gracelauncher.data.AppRepository
+import com.galaxyrio.gracelauncher.data.AppLaunchRouter
 import com.galaxyrio.gracelauncher.data.LauncherApp
 import org.junit.Assert.*
 import org.junit.Test
@@ -24,6 +24,10 @@ class AppLaunchRoutingTest {
         ContextWrapper(InstrumentationRegistry.getInstrumentation().targetContext) {
         val launches = mutableListOf<Pair<Intent, Bundle?>>()
         var profileServiceRequests = 0
+
+        // AppRepository deliberately retains only applicationContext. Preserve this
+        // recording boundary so tests never dispatch real Android launches.
+        override fun getApplicationContext(): Context = this
 
         override fun startActivity(intent: Intent, options: Bundle?) {
             launches += intent to options
@@ -46,7 +50,7 @@ class AppLaunchRoutingTest {
             val context = RecordingContext()
             val bounds = Rect(10, 20, 60, 70)
             val options = Bundle().apply { putString("animation", "preserved") }
-            assertTrue(AppRepository(context).launch(app.copy(user = user), bounds, options))
+            assertTrue(AppLaunchRouter.launch(context, app.copy(user = user), bounds, options))
             val (intent, actualOptions) = context.launches.single()
             assertEquals(Intent.ACTION_MAIN, intent.action)
             assertEquals(setOf(Intent.CATEGORY_LAUNCHER), intent.categories)
@@ -61,7 +65,7 @@ class AppLaunchRoutingTest {
     @Test fun personalLaunchFailuresAreReportedWithoutAnotherLaunchAttempt() {
         for (failure in listOf(ActivityNotFoundException("Missing entry"), SecurityException("Denied"))) {
             val context = RecordingContext(failure)
-            assertFalse(AppRepository(context).launch(app))
+            assertFalse(AppLaunchRouter.launch(context, app))
             assertEquals(1, context.launches.size)
             assertEquals(0, context.profileServiceRequests)
         }
@@ -71,7 +75,7 @@ class AppLaunchRoutingTest {
         val context = RecordingContext()
         val otherUser = listOf(UserHandle.getUserHandleForUid(0), UserHandle.getUserHandleForUid(100_000))
             .first { it != Process.myUserHandle() }
-        assertFalse(AppRepository(context).launch(app.copy(user = otherUser)))
+        assertFalse(AppLaunchRouter.launch(context, app.copy(user = otherUser)))
         assertEquals(1, context.profileServiceRequests)
         assertTrue(context.launches.isEmpty())
     }

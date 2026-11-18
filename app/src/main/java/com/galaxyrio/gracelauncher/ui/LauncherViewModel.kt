@@ -1273,6 +1273,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         if (app.isPrivateSpace && !privateSpaceController.prepareAppLaunch(app.user, app.key)) return false
         if (!app.isPrivateSpace) privateSpaceController.close()
         val launched = app.shortcut?.let { shortcutRepository.launch(it, bounds, options) } ?: appRepository.launch(app, bounds, options)
+        if (!launched && app.shortcut != null && !app.isPrivateSpace) {
+            viewModelScope.launch { shortcutRepository.repairPinnedShortcut(app.shortcut) }
+        }
         if (app.isPrivateSpace) privateSpaceController.finishAppLaunch(launched)
         if (launched && fromSearch && (!app.isPrivateSpace || _uiState.value.settings.privateSpace.exposesApps)) {
             updateSettings { it.copy(search = it.search.recordApp(app.key)) }
@@ -1324,6 +1327,9 @@ class LauncherViewModel(application: Application) : AndroidViewModel(application
         if (shortcut.isPrivateSpace && !preparePrivateShortcutLaunch(shortcut)) return false
         if (!shortcut.isPrivateSpace) privateSpaceController.close()
         val launched = shortcutRepository.launch(shortcut, bounds, options)
+        if (!launched && !shortcut.isPrivateSpace) {
+            viewModelScope.launch { shortcutRepository.repairPinnedShortcut(shortcut) }
+        }
         if (shortcut.isPrivateSpace) privateSpaceController.finishAppLaunch(launched)
         return launched
     }
